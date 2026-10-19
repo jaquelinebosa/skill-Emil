@@ -96,13 +96,13 @@ h1 .it,h2 .it{font-size:1.12em;letter-spacing:-.01em}
 
 /* A vs B */
 .ab{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px;flex:1;min-height:0}
-.card{border-radius:26px;padding:40px 44px;display:flex;flex-direction:column;gap:20px;min-height:0}
+.card{border-radius:26px;padding:34px 40px;display:flex;flex-direction:column;gap:16px;min-height:0}
 .card.a{background:var(--nevoa);color:var(--grafite)}
 .card.b{background:#232222;border:1px solid var(--linha)}
 .card .letra{flex:none;width:60px;height:60px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:34px}
 .card.a .letra{background:var(--grafite);color:var(--nevoa)}
 .card.b .letra{background:var(--nevoa);color:var(--grafite)}
-.card .desc{font-size:31px;line-height:1.35;margin:0}
+.card .desc{font-size:27px;line-height:1.35;margin:0}
 .card.a .desc{color:var(--ardosia)}
 .card .desc strong{font-weight:800}
 .card.a .desc strong{color:var(--grafite)}
@@ -170,6 +170,35 @@ h1 .it,h2 .it{font-size:1.12em;letter-spacing:-.01em}
 .lista{display:flex;flex-direction:column;gap:20px;margin-top:40px;font-size:36px;color:var(--pedra)}
 .lista b{color:var(--nevoa)}
 
+/* atmosfera de palco: halos da marca, granulado e vinheta */
+.stage::before{content:"";position:absolute;inset:-25%;z-index:0;pointer-events:none;
+  background:radial-gradient(38% 30% at 50% 4%,rgba(225,31,203,.20),transparent 70%),radial-gradient(30% 30% at 96% 98%,rgba(245,153,75,.15),transparent 70%),radial-gradient(26% 26% at 4% 90%,rgba(236,79,166,.08),transparent 70%);
+  animation:deriva 22s ease-in-out infinite alternate}
+@keyframes deriva{to{transform:translate(3%,-2%) scale(1.06)}}
+.stage::after{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 58%,rgba(0,0,0,.42) 100%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+  opacity:.5;mix-blend-mode:overlay}
+.slide{z-index:1}
+.preto{z-index:5}
+/* revelação por clique: cada [data-e] aparece na sua etapa */
+[data-e]{opacity:0;transform:translateY(22px);filter:blur(8px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1),filter .7s ease}
+[data-e].on{opacity:1;transform:none;filter:none}
+/* títulos montados palavra por palavra */
+.w{display:inline-block;opacity:0;transform:translateY(.35em) rotate(2deg);filter:blur(10px);animation:wIn .75s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i) * 55ms + 150ms)}
+@keyframes wIn{to{opacity:1;transform:none;filter:none}}
+.g{text-shadow:none}
+h1 .g,h2 .g{filter:drop-shadow(0 0 28px rgba(225,31,203,.35))}
+/* progresso e marcadores */
+.progresso{position:absolute;left:0;top:0;height:4px;background:var(--grad);z-index:6;transition:width .6s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 18px rgba(225,31,203,.6)}
+.ticks{position:absolute;right:30px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:flex-end;gap:11px;z-index:6}
+.tick{position:relative;width:14px;height:3px;border:0;padding:0;border-radius:2px;background:rgba(241,238,234,.22);transition:width .3s,background .3s}
+.tick.on{width:34px;background:var(--grad)}
+.tick:hover{background:rgba(241,238,234,.6)}
+.tick span{position:absolute;right:46px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:18px;color:var(--nevoa);background:rgba(25,25,25,.9);padding:6px 12px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s}
+.tick:hover span{opacity:1}
+.sem-cursor,.sem-cursor *{cursor:none!important}
+.dica-clique{position:absolute;left:50%;bottom:36px;transform:translateX(-50%);z-index:6;font-size:16px;letter-spacing:.2em;text-transform:uppercase;color:var(--ardosia);animation:pulsa 1.8s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.w{animation:none;opacity:1;transform:none;filter:none}[data-e]{transition:none}.stage::before{animation:none}}
 .status{position:absolute;right:28px;bottom:22px;width:10px;height:10px;border-radius:50%;background:var(--ardosia)}
 .status.on{background:#3a3}
 .aviso{position:absolute;left:50%;top:40px;transform:translateX(-50%);background:var(--papel);color:var(--grafite);padding:22px 36px;border-radius:14px;font-size:28px;font-weight:600;z-index:5;box-shadow:0 10px 40px rgba(0,0,0,.4)}
@@ -356,11 +385,20 @@ const SLIDES = [
   <p>Deixar este slide no ar até o fim das perguntas.</p>`}
 ];
 
+/* Quantos cliques de "revelar" cada slide tem antes de passar para o próximo. */
+const ETAPAS = {mercado:1, preco:1, decide:2, definicao:1, estranho:1, ativos:3, palavra_insta:1, fotos:2, escopo:1, pai:1, nome:1};
+SLIDES.forEach(s => s.etapas = ETAPAS[s.id] || 0);
+/* No banco, slide e etapa viajam juntos: slide*10 + etapa. */
+const codificar = (i, e) => i*10 + e;
+const decodificar = v => [Math.floor((v||0)/10), (v||0) % 10];
+const proximo = (i, e) => e < SLIDES[i].etapas ? [i, e+1] : (i < SLIDES.length-1 ? [i+1, 0] : [i, e]);
+const anterior = (i, e) => e > 0 ? [i, e-1] : (i > 0 ? [i-1, SLIDES[i-1].etapas] : [i, e]);
+
 /* ===== Estado ===== */
 let sb = null;
 const VOTOS = {};                 // pergunta -> Map(dispositivo -> opcao)
 let SESSAO = {slide:0, abertas:[]};
-let atual = 0;
+let atual = 0, etapa = 0;
 let online = false;
 
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -400,10 +438,10 @@ function assinar(){
   if (MODO !== "plateia") ch.on("postgres_changes", {event:"INSERT", schema:"public", table:"votos", filter:"sessao=eq." + CFG.sessao}, p => { addVoto(p.new); aoMudarVotos(); });
   ch.subscribe(st => { if (st === "SUBSCRIBED"){ online = true; marcarStatus(); } });
 }
-async function controlar(i){
+async function controlar(i, e){
   const abertas = SLIDES[i].abre || [];
   if (!sb || !CHAVE) return false;
-  const {data, error} = await sb.rpc("controlar", {p_sessao:CFG.sessao, p_chave:CHAVE, p_slide:i, p_abertas:abertas});
+  const {data, error} = await sb.rpc("controlar", {p_sessao:CFG.sessao, p_chave:CHAVE, p_slide:codificar(i, e||0), p_abertas:abertas});
   if (error || data !== 1){ avisar(error ? "Sem conexão com a votação. Os slides seguem funcionando." : "Chave inválida: confira o link."); return false; }
   return true;
 }
@@ -468,10 +506,10 @@ const TELAS = {
  mercado: () => `${topo("O mercado")}
   <div class="centro">
    <h2 class="h-l">Concorrência grande sempre existiu. O que derruba o preço é concorrência <span class="it g">parecida.</span></h2>
-   <div class="dados">
-    <div class="dado"><div class="n num">87%</div><p>dos fornecedores do setor de eventos são MEI, micro ou pequena empresa</p></div>
-    <div class="dado"><div class="n num">R$ 32 bi</div><p>movimentados pelo mercado de casamentos em 2025</p></div>
-    <div class="dado"><div class="n num">476 mil</div><p>cerimônias, com ticket médio de R$ 66 mil</p></div>
+   <div class="dados" data-e="1">
+    <div class="dado"><div class="n num" data-count="87" data-suf="%">0%</div><p>dos fornecedores do setor de eventos são MEI, micro ou pequena empresa</p></div>
+    <div class="dado"><div class="n num" data-count="32" data-pre="R$ " data-suf=" bi">R$ 0 bi</div><p>movimentados pelo mercado de casamentos em 2025</p></div>
+    <div class="dado"><div class="n num" data-count="476" data-suf=" mil">0 mil</div><p>cerimônias, com ticket médio de R$ 66 mil</p></div>
    </div>
   </div>
   <div class="fonte">Fontes: SEBRAE e Abrafesta; Casar.com e Assessoria VIP via Exame, 2025.</div>`,
@@ -497,20 +535,20 @@ const TELAS = {
     <div class="media">Preço médio <b class="num g" data-media="preco_b">·</b></div>
    </div>
   </div>
-  <div class="faixa"><p>O mesmo bolo, a mesma receita. O B saiu</p><div class="mult num" data-mult><span class="g">aguardando votos</span></div></div>`,
+  <div class="faixa" data-e="1"><p>O mesmo bolo, a mesma receita. O B saiu</p><div class="mult num" data-mult><span class="g">aguardando votos</span></div></div>`,
  decide: () => `${topo("Como ela decide")}
   <div class="centro">
    <div class="dados duo" style="margin-top:0">
-    <div class="dado"><div class="n num g">89%</div><p>começam a busca por fornecedor online</p></div>
-    <div class="dado"><div class="n num">76%</div><p>decidem com base nas primeiras coisas que aparecem</p></div>
+    <div class="dado"><div class="n num g" data-count="89" data-suf="%">0%</div><p>começam a busca por fornecedor online</p></div>
+    <div class="dado" data-e="1"><div class="n num" data-count="76" data-suf="%">0%</div><p>decidem com base nas primeiras coisas que aparecem</p></div>
    </div>
-   <h2 class="h-m">Quando ela te chama pedindo orçamento, já decidiu quase tudo. Você negocia o que sobrou.</h2>
+   <h2 class="h-m" data-e="2">Quando ela te chama pedindo orçamento, já decidiu quase tudo. Você negocia o que sobrou.</h2>
   </div>
   <div class="fonte">Fonte: Google Brasil via Abrafesta.</div>`,
  definicao: () => `${topo("Marca pessoal")}
   <div class="frase">
    <h2 class="h-xl">O que já decidiram sobre você <span class="it g">antes</span> de te procurar.</h2>
-   <p class="lead">E se ninguém decidiu nada, sobra um critério só. <strong>O número.</strong></p>
+   <p class="lead" data-e="1">E se ninguém decidiu nada, sobra um critério só. <strong>O número.</strong></p>
   </div>`,
  quanto_custa: () => `${topo("Rodada 3 de 4 · diagnóstico", ["quanto_custa"])}
   <div class="enquete"><h2 class="h-m">Quando perguntam “quanto custa?”, você responde <span class="it g">com:</span></h2>${pollHTML("quanto_custa")}
@@ -518,7 +556,7 @@ const TELAS = {
  preto: () => ``,
  estranho: () => `<div class="frase">
    <h2 class="h-xl">Eles não acharam barato. Acharam <span class="it g">estranho.</span></h2>
-   <p class="lead">Quando o cliente não tem nenhuma outra informação sobre você, <strong>o preço vira a informação.</strong></p>
+   <p class="lead" data-e="1">Quando o cliente não tem nenhuma outra informação sobre você, <strong>o preço vira a informação.</strong></p>
   </div>`,
  ativos: () => `${topo("O que tira você da comparação")}
   <div class="ativos">
@@ -527,34 +565,34 @@ const TELAS = {
      ["luisa","@luisaabram","Por que você faz assim","História","<b>Luisa Abram.</b> Começou aos 22 anos com 20 quilos de cacau da Amazônia.","O cacau do concorrente também é cacau. O dela tem o nome do rio."],
      ["dengo","@dengochocolates","O que você escolheu","Critério","<b>Dengo.</b> Paga mais caro ao produtor de propósito, e conta isso.","A régua deixou de ser o chocolate."],
      ["bacio","Instagram da Bacio di Latte","O que sempre acontece","Padrão","<b>Bacio di Latte.</b> A mesma história há quinze anos: dois irmãos italianos.","Uma loja em 2011. Mais de 175 hoje."]
-   ].map(([f,cap,q,k,caso,moral]) => `<div class="ativo"><figure><img alt="Print do Instagram ${cap}" src="${FOTOS[f]}"><figcaption>${cap}</figcaption></figure><span class="q">${q}</span><span class="k">${k}</span><div class="caso">${caso}</div><div class="moral">${moral}</div></div>`).join("")}
+   ].map(([f,cap,q,k,caso,moral],i) => `<div class="ativo"${i ? ` data-e="${i}"` : ""}><figure><img alt="Print do Instagram ${cap}" src="${FOTOS[f]}"><figcaption>${cap}</figcaption></figure><span class="q">${q}</span><span class="k">${k}</span><div class="caso">${caso}</div><div class="moral">${moral}</div></div>`).join("")}
   </div>`,
  palavra: () => `${topo("Rodada 4 de 4 · agora é com vocês", ["palavra"])}
   <h2 class="h-m" style="margin-top:28px;max-width:1500px">A palavra que a sua última cliente usaria para descrever você.</h2>
   <div class="nuvem" data-cloud="palavra"><span style="font-size:34px;font-weight:300">As palavras aparecem aqui conforme vocês enviam.</span></div>`,
  palavra_insta: () => `${topo("Rodada 4 de 4 · a pergunta que dói", ["palavra_insta"])}
   <div class="enquete"><h2 class="h-m">Essa palavra aparece hoje no seu <span class="it g">Instagram?</span></h2>${pollHTML("palavra_insta")}
-  <p class="lead">Se ela está só na sua cabeça, <strong>ela não está trabalhando para você.</strong></p></div>`,
+  <p class="lead" data-e="1">Se ela está só na sua cabeça, <strong>ela não está trabalhando para você.</strong></p></div>`,
  fotos: () => `${topo("Com o celular que você tem")}
   <h2 class="h-m" style="margin-top:28px">As duas são de produto <span class="it g">bom.</span></h2>
   <div class="duas">
    <figure><div class="img"><img alt="Doce em pote de plástico fechado, sem cenário" src="${FOTOS.ruim}"></div><figcaption>O que a maioria posta<span>Pote fechado, plástico refletindo, sem cenário.</span></figcaption></figure>
-   <figure><div class="img"><img alt="Bolo em luz de janela, cena limpa com flores" src="${FOTOS.boa}"></div><figcaption>O que o mesmo celular faz<span>Luz de janela, cena limpa, um apoio que conta história.</span></figcaption></figure>
+   <figure data-e="1"><div class="img"><img alt="Bolo em luz de janela, cena limpa com flores" src="${FOTOS.boa}"></div><figcaption>O que o mesmo celular faz<span>Luz de janela, cena limpa, um apoio que conta história.</span></figcaption></figure>
   </div>
-  <div class="dicas"><span><b>1</b>Limpe a cena</span><span><b>2</b>Vá para a janela</span><span><b>3</b>Deixe uma pista de gente</span></div>`,
+  <div class="dicas" data-e="2"><span><b>1</b>Limpe a cena</span><span><b>2</b>Vá para a janela</span><span><b>3</b>Deixe uma pista de gente</span></div>`,
  escopo: () => `${topo("A resposta ao “tem desconto?”")}
   <div class="frase">
    <h2 class="h-xl">Escopo reduz. Preço não <span class="it g">desce.</span></h2>
-   <p class="lead">Tirou duzentos reais e entregou a mesma coisa: você ensinou que o preço estava inflado. <strong>Tirou duzentos e tirou a montagem junto: você ensinou que o preço tem lastro.</strong></p>
+   <p class="lead" data-e="1">Tirou duzentos reais e entregou a mesma coisa: você ensinou que o preço estava inflado. <strong>Tirou duzentos e tirou a montagem junto: você ensinou que o preço tem lastro.</strong></p>
   </div>`,
  pai: () => `<div class="frase">
    <h2 class="h-l" style="font-weight:600">“A única coisa que ninguém tira de você é o que você aprende, o seu <span class="it g">conhecimento.</span>”</h2>
    <p class="lead">meu pai</p>
-   <p class="lead" style="margin-top:30px">Se o seu conhecimento fica só dentro de você, <strong>o cliente não tem como pagar por ele.</strong></p>
+   <p class="lead" data-e="1" style="margin-top:30px">Se o seu conhecimento fica só dentro de você, <strong>o cliente não tem como pagar por ele.</strong></p>
   </div>`,
  nome: () => `<div class="frase">
    <h2 class="h-l">Ninguém compara dois bolos iguais pelo preço da farinha.</h2>
-   <h2 class="h-xl">Compara pelo <span class="it g">nome</span> de quem assinou.</h2>
+   <h2 class="h-xl" data-e="1">Compara pelo <span class="it g">nome</span> de quem assinou.</h2>
   </div>`,
  material: () => `<div class="fecho">
    <div>
@@ -584,37 +622,101 @@ function iniciarTelao(){
   };
   marcarStatus = () => { const d = stage.querySelector(".status"); if (d) d.classList.toggle("on", online); };
 
+  const ticks = SLIDES.map((s, n) => `<button class="tick" data-n="${n}" aria-label="Ir para o slide ${n+1}: ${esc(s.tit)}"><span>${n+1} · ${esc(s.tit)}</span></button>`).join("");
   function desenhar(){
     const s = SLIDES[atual];
-    stage.innerHTML = `<section class="slide${s.id==="preto"?" preto":""}">${TELAS[s.id]()}${s.id==="preto"?"":rodape(atual)}</section><span class="status"></span>`;
+    stage.innerHTML = `<section class="slide${s.id==="preto"?" preto":""}">${TELAS[s.id]()}${s.id==="preto"?"":rodape(atual)}</section>
+      <div class="progresso"></div><nav class="ticks">${ticks}</nav><span class="status"></span>`;
     stage.querySelectorAll("[data-qr]").forEach(qr);
+    stage.querySelectorAll(".slide h1, .slide h2").forEach(montarPalavras);
+    aplicarEtapa(true);
     marcarStatus();
     aoMudarVotos();
+  }
+  function aplicarEtapa(primeira){
+    const sec = stage.querySelector(".slide");
+    sec.querySelectorAll("[data-e]").forEach(el => {
+      const on = +el.dataset.e <= etapa;
+      if (on && !el.classList.contains("on")){ el.classList.add("on"); contarDentro(el); }
+      if (!on) el.classList.remove("on");
+    });
+    if (primeira) sec.querySelectorAll("[data-count]").forEach(el => { if (!el.closest("[data-e]")) contar(el); });
+    const total = SLIDES.reduce((t, s) => t + s.etapas + 1, 0);
+    const feito = SLIDES.slice(0, atual).reduce((t, s) => t + s.etapas + 1, 0) + etapa + 1;
+    stage.querySelector(".progresso").style.width = (100 * feito / total) + "%";
+    stage.querySelectorAll(".tick").forEach(t => t.classList.toggle("on", +t.dataset.n === atual));
+    let d = stage.querySelector(".dica-clique");
+    if (CHAVE && etapa < SLIDES[atual].etapas){ if (!d){ d = document.createElement("div"); d.className = "dica-clique"; d.textContent = "clique para revelar"; stage.appendChild(d); } }
+    else if (d) d.remove();
   }
   aoMudarVotos = () => atualizarResultados(stage);
   aoMudarSessao = (d) => {
     SESSAO = {slide:d.slide, abertas:d.abertas||[]};
-    if (d.slide !== atual && d.slide >= 0 && d.slide < SLIDES.length){ atual = d.slide; desenhar(); }
+    const [i, e] = decodificar(d.slide);
+    if (i < 0 || i >= SLIDES.length) return;
+    if (i !== atual){ atual = i; etapa = e; desenhar(); }
+    else if (e !== etapa){ etapa = e; aplicarEtapa(); }
   };
-  async function ir(i){
-    i = Math.max(0, Math.min(SLIDES.length-1, i));
-    if (i === atual) return;
-    atual = i; desenhar();
-    await controlar(i);
+  async function ir([i, e]){
+    i = Math.max(0, Math.min(SLIDES.length-1, i)); e = Math.max(0, Math.min(SLIDES[i].etapas, e));
+    if (i === atual && e === etapa) return;
+    const mudouSlide = i !== atual;
+    atual = i; etapa = e;
+    if (mudouSlide) desenhar(); else aplicarEtapa();
+    await controlar(i, e);
   }
+  stage.addEventListener("click", ev => {
+    if (!CHAVE) return;
+    const t = ev.target.closest(".tick");
+    if (t){ ir([+t.dataset.n, 0]); return; }
+    ir(proximo(atual, etapa));
+  });
+  let parado;
+  addEventListener("mousemove", () => { stage.classList.remove("sem-cursor"); clearTimeout(parado); parado = setTimeout(() => stage.classList.add("sem-cursor"), 2500); });
   let pedeZerar = false;
   addEventListener("keydown", e => {
     if (e.key === "f" || e.key === "F"){ document.documentElement.requestFullscreen?.().catch(()=>{}); return; }
     if (!CHAVE) return;   // sem chave o telão só espelha o roteiro
-    if (["ArrowRight","PageDown"," ","Enter"].includes(e.key)){ e.preventDefault(); ir(atual+1); }
-    if (["ArrowLeft","PageUp","Backspace"].includes(e.key)){ e.preventDefault(); ir(atual-1); }
-    if (e.key === "Home") ir(0);
+    if (["ArrowRight","PageDown"," ","Enter","ArrowDown"].includes(e.key)){ e.preventDefault(); ir(proximo(atual, etapa)); }
+    if (["ArrowLeft","PageUp","Backspace","ArrowUp"].includes(e.key)){ e.preventDefault(); ir(anterior(atual, etapa)); }
+    if (e.key === "Home") ir([0, 0]);
+    if (e.key === "End") ir([SLIDES.length-1, 0]);
     if (e.key === "z" || e.key === "Z"){
       if (pedeZerar){ pedeZerar = false; zerar(); } else { pedeZerar = true; avisar("Zerar todos os votos? Aperte Z de novo para confirmar."); setTimeout(()=>pedeZerar=false, 3500); }
     }
   });
   desenhar();
 }
+
+/* Quebra um título em palavras que entram uma a uma (o texto continua o mesmo para leitores de tela). */
+function montarPalavras(h){
+  if (h.dataset.montado) return; h.dataset.montado = 1;
+  let i = 0; const frag = document.createDocumentFragment();
+  [...h.childNodes].forEach(n => {
+    if (n.nodeType === 3){
+      n.textContent.split(/(\s+)/).forEach(part => {
+        if (!part) return;
+        if (/^\s+$/.test(part)){ frag.appendChild(document.createTextNode(" ")); return; }
+        const w = document.createElement("span"); w.className = "w"; w.style.setProperty("--i", i++); w.textContent = part; frag.appendChild(w);
+      });
+    } else if (n.nodeType === 1){
+      if (n.tagName === "BR"){ frag.appendChild(n); return; }
+      const w = document.createElement("span"); w.className = "w"; w.style.setProperty("--i", i++); w.appendChild(n); frag.appendChild(w);
+    }
+  });
+  h.textContent = ""; h.appendChild(frag);
+}
+/* Números que sobem contando quando aparecem. */
+function contar(el){
+  const alvo = parseFloat(el.dataset.count), de = parseFloat(el.dataset.from || "0"), dec = +(el.dataset.dec || 0);
+  const pre = el.dataset.pre || "", suf = el.dataset.suf || "";
+  const fmt = v => pre + v.toLocaleString("pt-BR", {minimumFractionDigits:dec, maximumFractionDigits:dec}) + suf;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches){ el.textContent = fmt(alvo); return; }
+  const t0 = performance.now(), dur = 1400;
+  const passo = t => { const k = Math.min(1, (t - t0)/dur), e = 1 - Math.pow(1-k, 3); el.textContent = fmt(de + (alvo-de)*e); if (k < 1) requestAnimationFrame(passo); else el.dataset.contou = 1; };
+  requestAnimationFrame(passo);
+}
+function contarDentro(el){ (el.matches("[data-count]") ? [el] : []).concat([...el.querySelectorAll("[data-count]")]).forEach(contar); }
 
 function atualizarResultados(root){
   root.querySelectorAll("[data-poll]").forEach(box => {
@@ -636,8 +738,10 @@ function atualizarResultados(root){
   root.querySelectorAll("[data-mult]").forEach(el => {
     const a = media("preco_a"), b = media("preco_b"), na = conta("preco_a").total, nb = conta("preco_b").total;
     if (!a || !b || na < 3 || nb < 3){ el.innerHTML = `<span class="g">aguardando votos</span>`; return; }
-    const r = b / a;
-    el.innerHTML = `<span class="g">${r.toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1})}× mais caro</span>`;
+    const r = b / a, txt = r.toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1}) + "× mais caro";
+    const sp = el.querySelector("[data-count]");
+    if (sp && sp.dataset.contou){ sp.dataset.count = r; sp.textContent = txt; return; }
+    el.innerHTML = `<span class="g" data-count="${r}" data-from="1" data-dec="1" data-suf="× mais caro">${txt}</span>`;
   });
   root.querySelectorAll("[data-cloud]").forEach(el => {
     const {total, by} = conta(el.dataset.cloud);
@@ -745,17 +849,17 @@ function iniciarRoteiro(){
     const s = SLIDES[atual], prox = SLIDES[atual+1];
     const vivo = (s.abre||[]).map(p => `<span>${esc(POLLS[p].q)} <b class="num">${conta(p).total} votos</b></span>`).join("");
     root.innerHTML = `
-      <div class="r-top"><span>${online ? "conectado" : "sem conexão"} · ${atual+1}/${SLIDES.length}</span><span class="relogio num" id="relogio">00:00</span></div>
+      <div class="r-top"><span>${online ? "conectado" : "sem conexão"} · ${atual+1}/${SLIDES.length}${s.etapas ? ` · revelação ${etapa}/${s.etapas}` : ""}</span><span class="relogio num" id="relogio">00:00</span></div>
       <div><div class="r-meta">entra em ${fmt(s.min*60)}</div><div class="r-tit">${esc(s.tit)}</div></div>
       ${vivo ? `<div class="r-vivo">${vivo}</div>` : ""}
       <div class="r-notas">${s.notas}</div>
       <div class="r-prox">${prox ? "Próximo: " + esc(prox.tit) : "Último slide."}</div>
       ${msg ? `<div class="r-conf">${esc(msg)}</div>` : ""}
-      <div class="r-bts"><button id="ant">Voltar</button><button id="prox" class="prox">Avançar</button></div>
+      <div class="r-bts"><button id="ant">Voltar</button><button id="prox" class="prox">${etapa < s.etapas ? "Revelar" : "Avançar"}</button></div>
       ${conf ? `<div class="r-conf">Apagar todos os votos? <button id="sim">Sim, zerar</button><button id="nao">Cancelar</button></div>` : `<button class="r-zerar" id="zerar">Zerar votos do ensaio</button>`}`;
     tic();
-    root.querySelector("#ant").onclick = () => ir(atual-1);
-    root.querySelector("#prox").onclick = () => ir(atual+1);
+    root.querySelector("#ant").onclick = () => ir(anterior(atual, etapa));
+    root.querySelector("#prox").onclick = () => ir(proximo(atual, etapa));
     const z = root.querySelector("#zerar"); if (z) z.onclick = () => { conf = true; render(); };
     const sim = root.querySelector("#sim"); if (sim) sim.onclick = async () => { conf = false; try{localStorage.removeItem("pa-inicio")}catch(e){} await zerar(); render(); };
     const nao = root.querySelector("#nao"); if (nao) nao.onclick = () => { conf = false; render(); };
@@ -769,14 +873,13 @@ function iniciarRoteiro(){
     el.classList.toggle("atras", !!(inicioRelogio && prox && dec > prox.min*60 + 30));
   }
   setInterval(tic, 1000);
-  async function ir(i){
-    i = Math.max(0, Math.min(SLIDES.length-1, i));
-    if (i === atual) return;
-    if (!inicioRelogio && i > 0){ inicioRelogio = Date.now(); try{localStorage.setItem("pa-inicio", inicioRelogio)}catch(e){} }
-    atual = i; render();
-    await controlar(i);
+  async function ir([i, e]){
+    if (i === atual && e === etapa) return;
+    if (!inicioRelogio && (i > 0 || e > 0)){ inicioRelogio = Date.now(); try{localStorage.setItem("pa-inicio", inicioRelogio)}catch(er){} }
+    atual = i; etapa = e; render();
+    await controlar(i, e);
   }
-  aoMudarSessao = d => { SESSAO = {slide:d.slide, abertas:d.abertas||[]}; if (d.slide !== atual){ atual = d.slide; } render(); };
+  aoMudarSessao = d => { SESSAO = {slide:d.slide, abertas:d.abertas||[]}; [atual, etapa] = decodificar(d.slide); render(); };
   aoMudarVotos = () => { const el = root.querySelector(".r-vivo"); if (el) render(); };
   if (!CHAVE) avisar("Abra o roteiro com a chave no link para controlar o telão.");
   render();
