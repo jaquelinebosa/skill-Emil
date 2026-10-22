@@ -166,6 +166,7 @@ h1 .it,h2 .it{font-size:1.12em;letter-spacing:-.01em}
 /* nuvem */
 .nuvem{flex:1;display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:18px 46px;padding:20px 60px}
 .nuvem span{font-weight:800;line-height:1.05;letter-spacing:-.01em;animation:entra .5s ease both;color:var(--pedra)}
+.nuvem span.fixa{animation:none}
 .nuvem span.top{font-family:var(--serif);font-style:italic;font-weight:400;color:transparent;padding-inline:.08em}
 
 /* fecho */
@@ -768,14 +769,32 @@ function atualizarResultados(root){
     const max = lista[0][1], campea = lista[0];
     // mistura a ordem para a nuvem não virar ranking, com a maior no centro
     const ordem = []; lista.forEach((w,i) => i % 2 ? ordem.push(w) : ordem.unshift(w));
-    el.innerHTML = "";
+    // Reaproveita as palavras que já estão na tela: só as novas fazem a entrada,
+    // as antigas deslizam até o lugar novo. Recriar tudo fazia a nuvem piscar a cada voto.
+    const spans = el._spans ||= new Map();
+    const escala = el.getBoundingClientRect().width / (el.offsetWidth || 1) || 1;
+    const antes = new Map();
+    spans.forEach((s, w) => antes.set(w, s.getBoundingClientRect()));
+    const ficam = new Set(ordem.map(([w]) => w));
+    spans.forEach((s, w) => { if (!ficam.has(w)){ s.remove(); spans.delete(w); } });
+    [...el.children].forEach(c => { if (!c._palavra) c.remove(); });   // texto de espera
     ordem.forEach(([w,n]) => {
-      const s = document.createElement("span");
-      s.textContent = w;
+      let s = spans.get(w);
+      const nova = !s;
+      if (nova){ s = document.createElement("span"); s._palavra = w; s.textContent = w; spans.set(w, s); }
+      s.className = nova ? "" : "fixa";
+      s.style.color = "";
       s.style.fontSize = Math.round(40 + 110 * Math.sqrt(n/max)) + "px";
-      if (w === campea[0]){ s.className = "top g"; s.style.fontSize = "170px"; }
+      if (w === campea[0]){ s.classList.add("top", "g"); s.style.fontSize = "170px"; }
       else if (n/max > .5) s.style.color = "var(--nevoa)";
       el.appendChild(s);
+    });
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    antes.forEach((r, w) => {
+      const s = spans.get(w); if (!s) return;
+      const d = s.getBoundingClientRect();
+      const dx = (r.left - d.left) / escala, dy = (r.top - d.top) / escala;
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) s.animate([{transform:`translate(${dx}px,${dy}px)`}, {transform:"none"}], {duration:450, easing:"cubic-bezier(.2,.7,.2,1)"});
     });
   });
 }
