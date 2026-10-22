@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>IA na Agência · ao vivo</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;600;800&family=Instrument+Serif:ital@0;1&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+/*CSS_BASE*/
+
+/* ================= OPERAND: peças novas ================= */
+.votos-box .u{display:block;font-size:22px;font-weight:600;color:var(--nevoa);letter-spacing:.02em;text-transform:none;margin-top:6px}
+.capa h1{font-size:150px}
+.capa .entrar .url{font-size:25px;white-space:nowrap}
+.lado{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;flex:1;margin-top:40px}
+.lado .poll .row{grid-template-columns:260px 1fr 110px}
+/* contador de horas */
+.contador{display:flex;flex-direction:column;gap:18px}
+.contador .n{font-size:230px;font-weight:800;letter-spacing:-.04em;line-height:.9}
+.contador .u2{font-size:38px;font-weight:600}
+.contador .s{font-size:30px;color:var(--pedra);line-height:1.35;max-width:760px}
+.contador .s b{color:var(--nevoa)}
+.contador .eq{margin-top:26px;border-top:1px solid var(--linha);padding-top:26px;font-size:40px;line-height:1.25;font-weight:600}
+.contador .eq .g{font-size:76px;font-weight:800}
+/* três perguntas do mapa */
+.tres{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:56px}
+.tres .p{border:1px solid var(--linha);border-radius:26px;padding:40px;background:rgba(241,238,234,.03);display:flex;flex-direction:column;gap:18px}
+.tres .p .l{font-family:var(--serif);font-style:italic;font-size:120px;line-height:.8}
+.tres .p b{font-size:46px;letter-spacing:-.01em}
+.tres .p span{font-size:30px;color:var(--pedra);line-height:1.35}
+/* mapa ao vivo */
+.mapa{display:grid;grid-template-columns:1fr 560px;gap:56px;flex:1;min-height:0;margin-top:26px}
+.plano{position:relative;border-radius:24px;background:rgba(241,238,234,.025);border:1px solid var(--linha);overflow:hidden}
+.plano .q{position:absolute;width:50%;height:50%;padding:22px 26px;font-size:20px;letter-spacing:.16em;text-transform:uppercase;color:var(--ardosia)}
+.plano .q1{left:0;top:0}.plano .q2{right:0;top:0;text-align:right}.plano .q3{left:0;bottom:0;display:flex;align-items:flex-end}.plano .q4{right:0;bottom:0;display:flex;align-items:flex-end;justify-content:flex-end;color:var(--coral);background:radial-gradient(circle at 100% 100%,rgba(245,153,75,.14),transparent 70%)}
+.plano .eixo-x,.plano .eixo-y{position:absolute;background:var(--linha)}
+.plano .eixo-x{left:0;right:0;top:50%;height:1px}.plano .eixo-y{top:0;bottom:0;left:50%;width:1px}
+.plano .rx{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:18px;color:var(--pedra);letter-spacing:.1em;text-transform:uppercase}
+.plano .ry{position:absolute;left:14px;top:50%;transform:translateY(-50%) rotate(-90deg);transform-origin:left center;font-size:18px;color:var(--pedra);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;margin-left:12px}
+.bolha{position:absolute;transform:translate(-50%,50%);border-radius:50%;display:grid;place-items:center;text-align:center;background:rgba(241,238,234,.10);border:1px solid rgba(241,238,234,.25);transition:left .9s cubic-bezier(.2,.8,.2,1),bottom .9s cubic-bezier(.2,.8,.2,1),width .9s,height .9s,background .4s}
+.bolha span{font-size:21px;font-weight:600;line-height:1.1;padding:0 10px;max-width:190px}
+.bolha.top{background:var(--grad);border:0;box-shadow:0 0 50px rgba(225,31,203,.45)}
+.bolha.top span{color:#fff;font-weight:800}
+.rank{display:flex;flex-direction:column;gap:14px}
+.rank h3{margin:0 0 6px;font-size:22px;letter-spacing:.18em;text-transform:uppercase;color:var(--pedra);font-weight:600}
+.rk{display:grid;grid-template-columns:44px 1fr 90px;gap:14px;align-items:center;font-size:26px;padding:14px 18px;border-radius:14px;background:rgba(241,238,234,.03)}
+.rk i{font-style:normal;color:var(--ardosia);font-weight:800}
+.rk b{text-align:right;font-weight:800}
+.rk.top{background:linear-gradient(#1f1e1e,#1f1e1e) padding-box,var(--grad) border-box;border:2px solid transparent}
+.rank .ganha{margin-top:16px;font-size:34px;line-height:1.2;font-weight:800}
+.rank .leg{font-size:18px;color:var(--ardosia);line-height:1.4}
+/* demos antes e depois */
+.area-tag{display:inline-flex;gap:14px;align-items:center;font-size:24px;letter-spacing:.18em;text-transform:uppercase;color:var(--coral);font-weight:600}
+.ordem{font-size:22px;color:var(--pedra);letter-spacing:.06em}
+.ad{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin-top:40px;flex:1;min-height:0}
+.ad .col{border-radius:26px;padding:36px 40px;display:flex;flex-direction:column;gap:16px}
+.ad .antes{background:#1f1e1e;border:1px solid var(--linha)}
+.ad .depois{background:linear-gradient(#211f20,#211f20) padding-box,var(--grad) border-box;border:2px solid transparent}
+.ad .cab2{display:flex;justify-content:space-between;align-items:baseline}
+.ad .cab2 b{font-size:28px;letter-spacing:.2em;text-transform:uppercase}
+.ad .antes .cab2 b{color:var(--pedra)}
+.ad .cab2 span{font-size:24px;color:var(--pedra)}
+.ad ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:16px;counter-reset:p}
+.ad li{counter-increment:p;display:grid;grid-template-columns:46px 1fr;gap:16px;font-size:29px;line-height:1.3}
+.ad li::before{content:counter(p);width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:21px;font-weight:800;background:rgba(241,238,234,.08);color:var(--pedra)}
+.ad .antes li{color:var(--pedra)}
+.ad .depois li::before{background:var(--grad);color:#fff}
+.ad .fica{margin-top:auto;padding-top:18px;border-top:1px solid var(--linha);font-size:27px;line-height:1.3}
+.ad .fica small{display:block;font-size:19px;letter-spacing:.18em;text-transform:uppercase;color:var(--coral);margin-bottom:6px}
+.caso{margin-top:22px;display:flex;align-items:center;gap:40px;border-radius:22px;background:#0d0d0d;padding:24px 40px}
+.caso .ant{font-size:84px;font-weight:800;color:var(--pedra);text-decoration:line-through;text-decoration-thickness:4px}
+.caso .dep{font-size:110px;font-weight:800}
+.caso p{margin:0;font-size:28px;line-height:1.3;color:var(--pedra)}
+.caso p b{color:var(--nevoa)}
+/* critério: três níveis */
+.niveis{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;margin-top:56px}
+.nivel{border-radius:26px;padding:40px;display:flex;flex-direction:column;gap:16px;border:1px solid var(--linha);background:rgba(241,238,234,.03)}
+.nivel .dot{width:30px;height:30px;border-radius:50%}
+.nivel b{font-size:44px;letter-spacing:-.01em;line-height:1.05}
+.nivel span{font-size:28px;color:var(--pedra);line-height:1.35}
+.d1{background:#4CC38A}.d2{background:var(--coral)}.d3{background:var(--magenta)}
+/* semáforo ao vivo */
+.tarefa-card{margin-top:36px;border-radius:26px;background:var(--nevoa);color:var(--grafite);padding:36px 48px;font-size:56px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.tarefa-card small{display:block;font-size:22px;letter-spacing:.2em;text-transform:uppercase;color:var(--ardosia);font-weight:600;margin-bottom:12px}
+.sem{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:40px}
+.sem .row{display:flex;flex-direction:column;gap:18px;border:1px solid var(--linha);border-radius:24px;padding:30px 34px;transition:border-color .4s,background .4s,opacity .4s}
+.sem .row .lbl{display:flex;gap:16px;align-items:center;font-size:32px}
+.sem .row .lbl .dot{width:22px;height:22px;border-radius:50%;flex:none}
+.sem .row .pct{font-size:96px;font-weight:800;text-align:left;line-height:1}
+.sem .row .track{height:16px}
+.sem.revelado .row{opacity:.35}
+.sem.revelado .row.certa{opacity:1;background:rgba(241,238,234,.05);border:2px solid var(--nevoa)}
+.porque{margin-top:30px;font-size:36px;line-height:1.35;color:var(--pedra);max-width:1600px}
+.porque b{color:var(--nevoa)}
+/* equipe e ficha */
+.quatro{display:grid;grid-template-columns:repeat(2,1fr);gap:30px 44px;margin-top:48px}
+.quatro .it2{display:grid;grid-template-columns:70px 1fr;gap:24px;align-items:start}
+.quatro .it2 .k{font-size:60px;font-weight:800;line-height:1}
+.quatro .it2 b{display:block;font-size:40px;margin-bottom:8px;letter-spacing:-.01em}
+.quatro .it2 span{font-size:28px;color:var(--pedra);line-height:1.4}
+.ficha{display:grid;grid-template-columns:1fr 1fr;gap:0;border-radius:26px;overflow:hidden;background:var(--nevoa);color:var(--grafite);margin-top:40px}
+.ficha .tt{grid-column:1/-1;padding:30px 40px;background:var(--grafite);color:var(--nevoa);border:1px solid var(--linha);border-bottom:0;border-radius:26px 26px 0 0;display:flex;justify-content:space-between;align-items:baseline;font-size:40px;font-weight:800}
+.ficha .tt small{font-size:20px;letter-spacing:.2em;text-transform:uppercase;color:var(--pedra);font-weight:600}
+.ficha .c{padding:24px 40px;border-top:1px solid rgba(25,25,25,.1)}
+.ficha .c:nth-child(odd){border-left:1px solid rgba(25,25,25,.1)}
+.ficha .c small{display:block;font-size:18px;letter-spacing:.2em;text-transform:uppercase;color:var(--ardosia);font-weight:600;margin-bottom:6px}
+.ficha .c div{font-size:28px;line-height:1.35;font-weight:600}
+.ficha .c.cmd{grid-column:1/-1}
+.ficha .c.cmd div{font-family:ui-monospace,Menlo,monospace;font-size:23px;font-weight:400;background:#e6e1db;border-radius:12px;padding:16px 20px;line-height:1.5}
+/* compromisso */
+.comp{display:grid;grid-template-columns:1fr 600px;gap:56px;flex:1;min-height:0}
+.comp .nuvem{padding:10px}
+.comp .nuvem span.top{font-size:110px!important}
+.comp .rev{display:flex;flex-direction:column;gap:18px;justify-content:center}
+.comp .rev h3{margin:0;font-size:24px;letter-spacing:.18em;text-transform:uppercase;color:var(--pedra);font-weight:600}
+.comp .rev .row{grid-template-columns:230px 1fr 90px;gap:18px}
+.comp .rev .row .lbl{font-size:28px}
+.comp .rev .row .pct{font-size:34px}
+.comp .rev .track{height:34px}
+.acoes{display:flex;flex-direction:column;gap:30px;margin-top:50px}
+.acao{display:grid;grid-template-columns:110px 1fr;gap:30px;align-items:center}
+.acao .k{font-size:110px;font-weight:800;line-height:1}
+.acao b{display:block;font-size:52px;letter-spacing:-.01em}
+.acao span{font-size:30px;color:var(--pedra)}
+.kit{margin-top:auto;border-radius:22px;background:#0d0d0d;padding:28px 44px;display:flex;justify-content:space-between;align-items:center;gap:30px;font-size:32px;line-height:1.3}
+.kit b{font-weight:800}
+.kit span{color:var(--pedra);font-size:26px}
+/* plateia: voto já dado vira linha curta, e o plano de 7 dias */
+.p-feito{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--pedra);padding:10px 0}
+.p-feito b{color:var(--nevoa);text-align:right}
+.p-plano{border-radius:18px;padding:22px 20px;background:linear-gradient(#232222,#232222) padding-box,var(--grad) border-box;border:1px solid transparent;display:flex;flex-direction:column;gap:12px}
+.p-plano h2{font-size:26px;line-height:1.1}
+.p-plano p{margin:0}
+.p-plano .lin{font-size:15px;color:var(--pedra);line-height:1.45}
+.p-plano .lin b{color:var(--nevoa)}
+.p-plano ol{margin:4px 0 0;padding-left:20px;font-size:15px;line-height:1.55;color:var(--nevoa)}
+.p-plano .dica{font-size:13px;color:var(--coral);letter-spacing:.06em}
+</style>
+</head>
+<body>
+
+<div id="telao" hidden><div class="stage" id="stage"></div></div>
+<main id="plateia" hidden></main>
+<main id="roteiro" hidden></main>
+
+<script>
+/* ===== Configuração ===== */
+const CFG = {
+  url: "https://cuwvfqwbprqjojscxgwn.supabase.co",
+  anon: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1d3ZmcXdicHJxam9qc2N4Z3duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxODQ0MjgsImV4cCI6MjEwNzc2MDQyOH0.C7q2WuzR4TYvNMI0FGKXdbQW54i_szRtc83aI1UBxE8",
+  sessao: "operand",
+  publico: "https://jaquelinebosa.com.br/operand",   // o QR e o link do chat apontam para cá
+  titulo: "IA na agência sem complicação",
+  arroba: "@jaquelineestrategista",
+  minutos: 40
+};
+const qs = new URLSearchParams(location.search);
+const MODO = qs.has("telao") ? "telao" : qs.has("roteiro") ? "roteiro" : "plateia";
+const CHAVE = qs.get("chave") || "";
+const LINK_TXT = CFG.publico.replace(/^https?:\/\//, "");
+const FOTOS = { retrato: "__RETRATO__" };
+/* QR gerado para CFG.publico. Se mudar o endereço, gere de novo. */
+const QR = { publico: `__QR__` };
+
+/* ===== Perguntas ===== */
+const TAREFAS = [["relatorio","Relatório para cliente"],["ata","Ata e follow-up de reunião"],["pauta","Pauta e legendas"],["briefing","Briefing e ajustes"],["proposta","Proposta comercial"],["resposta","Respostas do dia a dia"]];
+const HORAS = [["h1","Até 2 horas"],["h2","De 2 a 5 horas"],["h3","De 5 a 10 horas"],["h4","Mais de 10 horas"]];
+const MEIO_H = {h1:1, h2:3.5, h3:7.5, h4:12};
+const NIVEL = [["sozinha","IA faz sozinha"],["revisa","IA rascunha, alguém revisa"],["gente","Só gente"]];
+const AREAS = [["atendimento","Atendimento"],["conteudo","Conteúdo e criação"],["gestao","Planejamento e relatórios"],["comercial","Comercial"]];
+const POLLS = {
+  uso_ia: {rot:"Aquecimento", q:"Para que a sua equipe mais usa IA hoje?", ops:[["texto","Textos e legendas"],["ideias","Ideias e roteiros"],["imagem","Imagens e criativos"],["dados","Relatórios e análises"],["atend","Atendimento e e-mails"],["nada","Ainda sem jeito organizado"]]},
+  horas: {rot:"Rodada 1", q:"Quantas horas por semana você gasta com tarefas que se repetem?", ctx:"Aquelas que você faz igual toda semana, para cliente diferente.", ops:HORAS},
+  freq: {rot:"Mapa · 1 de 3", q:"Qual dessas mais se repete na sua semana?", ops:TAREFAS},
+  tempo: {rot:"Mapa · 2 de 3", q:"E qual mais consome tempo?", ops:TAREFAS},
+  risco: {rot:"Mapa · 3 de 3", q:"Qual você menos entregaria para a IA hoje?", ctx:"A que mais dá medo de errar com o cliente.", ops:TAREFAS},
+  area: {rot:"Você escolhe", q:"Qual área você quer ver primeiro?", ctx:"A mais votada abre as demonstrações.", ops:AREAS},
+  s1: {rot:"Semáforo · 1 de 3", q:"Resumir a reunião interna de pauta para quem faltou.", ops:NIVEL},
+  s2: {rot:"Semáforo · 2 de 3", q:"Escrever as legendas do mês de um cliente.", ops:NIVEL},
+  s3: {rot:"Semáforo · 3 de 3", q:"Responder um cliente irritado com um atraso.", ops:NIVEL},
+  tarefa: {rot:"Seu compromisso", q:"Qual tarefa você vai testar com IA na semana que vem?", ctx:"Duas ou três palavras. Ex.: ata de reunião.", livre:true},
+  revisor: {rot:"Seu compromisso", q:"Quem vai revisar o que a IA entregar?", ops:[["eu","Eu"],["lider","A liderança"],["dupla","Uma dupla da equipe"],["naosei","Ainda não sei"]]}
+};
+const SEM = {
+  s1: {certa:"sozinha", porque:"Interno, baixo risco e fácil de conferir. <b>Deixa a IA fazer e usa o tempo em outra coisa.</b>"},
+  s2: {certa:"revisa", porque:"Ganho alto, mas sai com o nome do cliente. <b>A IA faz a primeira versão, alguém da equipe lê antes de publicar.</b>"},
+  s3: {certa:"gente", porque:"A IA pode te ajudar a organizar o que dizer. <b>Quem fala com o cliente, nessa hora, é você.</b>"}
+};
+
+/* As quatro demonstrações. A ordem em que entram é a da votação “area”. */
+const DEMOS = {
+  atendimento: {titulo:"Da reunião com o cliente à ata enviada",
+    antes:["Alguém anota enquanto tenta participar da reunião","Passa a limpo no fim do dia","Lista as pendências de memória","Manda o e-mail no dia seguinte, quando lembra"],
+    depois:["A reunião é transcrita pela ferramenta que vocês já usam: Meet, Zoom ou Teams","Um comando salvo transforma a transcrição em ata: decisões, pendências, responsáveis e prazos","O atendimento confere e envia no mesmo dia"],
+    fica:"Conferir o que foi combinado e o tom com o cliente.",
+    notas:`<p>“Começa pelo que toda agência faz toda semana: reunião com cliente.”</p><p>Ler o ANTES com cara de quem já viveu. Clique: DEPOIS. Clique: o que fica com a equipe.</p><p>Frase: “A IA não participa da reunião por você. Ela tira de você o trabalho de passar a limpo.”</p>`},
+  conteudo: {titulo:"Do briefing às primeiras versões no tom do cliente",
+    antes:["O briefing chega solto, em áudio e mensagem","A pauta começa do zero todo mês","A primeira versão volta porque não tem a cara do cliente","Mais duas rodadas de ajuste de tom"],
+    depois:["O guia de voz e os posts aprovados do cliente ficam salvos num projeto da IA","O briefing vira pauta e três ganchos por tema","O redator escolhe, lapida e manda para aprovação"],
+    fica:"Escolher a ideia certa e dar o acabamento.",
+    notas:`<p>“O problema da IA no conteúdo quase nunca é a IA. É que ela não conhece o cliente.”</p><p>DEPOIS: o projeto com o guia de voz é o que muda o jogo. ChatGPT, Claude e Gemini têm isso.</p><p>“O redator deixa de escrever do zero e passa a editar. Edição é onde está o talento dele.”</p>`},
+  gestao: {titulo:"Do material solto ao planejamento estratégico",
+    antes:["Dados, pesquisas e histórico do cliente em pastas diferentes","Diagnóstico e plano escritos do zero","Horas formatando a apresentação"],
+    depois:["Todo o material do cliente num só projeto da IA","Uma rotina de comando por etapa: diagnóstico, cenário, plano","A estrategista revisa, corta e decide"],
+    fica:"As decisões e o que vai para o cliente.",
+    caso:true,
+    notas:`<p>Este é caso meu, com número real. “MB Consultoria Política, com a Mariana Bonjour.”</p><p>Clique final mostra 36 para 9 horas. “O plano não ficou pior. Ficou pronto antes, e sobrou tempo para pensar.”</p>`},
+  comercial: {titulo:"Da reunião de diagnóstico à proposta personalizada",
+    antes:["Abre a proposta do último cliente","Troca nome e valores e torce para não esquecer nada","A dor do cliente aparece genérica","A proposta sai dias depois da conversa"],
+    depois:["As anotações da reunião entram junto com o modelo de proposta da agência","A IA monta o rascunho com a dor do cliente nas palavras dele","O comercial revisa escopo, prazo e preço e envia com a conversa ainda quente"],
+    fica:"Escopo, preço e a relação.",
+    notas:`<p>Lembrar o Censo: 42% acumulam atendimento e comercial. “Proposta é onde esse acúmulo mais aparece.”</p><p>“Quem já mandou proposta com o nome do cliente anterior levanta a mão no chat.” (Pausa, ler o chat.)</p>`}
+};
+function ordemDemos(){
+  const {by} = conta("area");
+  return AREAS.map(([id], i) => [id, by[id]||0, i]).sort((a,b) => b[1]-a[1] || a[2]-b[2]).map(x => x[0]);
+}
+const nomeArea = id => (AREAS.find(a => a[0]===id)||[,""])[1];
+const nomeTarefa = id => (TAREFAS.find(a => a[0]===id)||[,""])[1];
+
+/* ===== Slides =====
+   min = minuto-alvo em que o slide deve ENTRAR (relógio do roteiro, 0 = 16h03).
+   abre = perguntas abertas no celular enquanto este slide está no ar.
+   Online tem atraso de transmissão: algumas perguntas ficam abertas também no slide seguinte. */
+const SLIDES = [
+ {id:"capa", min:0, tit:"Capa + entrada da plateia", abre:["uso_ia"],
+  notas:`<p>A Amanda te apresenta. Capa no ar, QR e link grandes.</p>
+  <p>“Pega o celular e aponta para o QR, ou clica no link que a Amanda vai fixar no chat. Hoje quem monta essa palestra são vocês.”</p>
+  <p>Pedir para a Amanda fixar no chat: <b>${"jaquelinebosa.com.br/operand"}</b></p>
+  <p>Dar uns 40 segundos. A transmissão tem atraso, eles veem você uns segundos depois.</p>`},
+ {id:"uso_ia", min:1, tit:"Aquecimento: para que a equipe usa IA", abre:["uso_ia"],
+  notas:`<p>Ler o resultado em voz alta. Também ler 2 ou 3 respostas do chat.</p>
+  <p class="se">Se ganhar textos e legendas:</p><p>“A maioria usa IA para escrever. É o começo. Hoje eu quero mostrar onde está o tempo de verdade.”</p>
+  <p class="se">Se “ainda sem jeito organizado” for alto:</p><p>“Que bom que estão aqui. Essa palestra é exatamente para isso: organizar.”</p>`},
+ {id:"horas", min:2.5, tit:"Rodada 1: as horas da sala", abre:["horas"],
+  notas:`<p>“Agora uma conta. Quantas horas por semana você gasta com tarefas que se repetem?”</p>
+  <p>O número grande soma as horas de todo mundo que votou, pelo meio de cada faixa. Deixar subir.</p>
+  <p>Clique: “É como ter X pessoas trabalhando só nisso, a semana inteira.” Pausa.</p>`},
+ {id:"censo", min:4, tit:"Censo Agências 2026", abre:["horas"],
+  notas:`<p>“6 em cada 10 lideranças de agência dizem que o desafio é prospecção e escala.”</p>
+  <p>Clique: “E 42% acumulam atendimento e comercial.”</p>
+  <p>Clique: “Não falta vontade de crescer. Falta tempo. E o tempo está preso nessas horas que vocês acabaram de somar.”</p>`},
+ {id:"eu", min:5.5, tit:"Quem está aqui com vocês (30s)",
+  notas:`<p>TRINTA SEGUNDOS.</p>
+  <p>“Passei 15 anos no Itaú cuidando de relacionamento com cliente de alta renda. Hoje ajudo agências e consultorias a colocar IA na rotina, com o Método AXIA.”</p>`},
+ {id:"tese", min:6, tit:"A tese: IA entra pela rotina",
+  notas:`<p>“IA na agência não começa pela ferramenta. Começa pela rotina.”</p>
+  <p>Clique: “Quem começa pela ferramenta coleciona assinatura. Quem começa pela rotina ganha hora.”</p>`},
+ {id:"tres", min:7, tit:"O mapa: frequência, tempo, risco",
+  notas:`<p>“Para escolher por onde começar, três perguntas.” Revelar uma por clique.</p>
+  <p>Frequência: quantas vezes se repete. Tempo: quanto come. Risco: o tamanho do estrago se sair errado.</p>
+  <p>“Agora vocês vão responder as três no celular, e o mapa da sala vai se montar aqui.”</p>`},
+ {id:"mapa", min:8, tit:"Mapa ao vivo da sala", abre:["freq","tempo","risco"],
+  notas:`<p>As três perguntas abrem juntas no celular. Dar 60 a 90 segundos, a transmissão atrasa.</p>
+  <p>Ler o mapa: “Lá embaixo à direita é onde se começa: repete muito, toma tempo e o risco é baixo.”</p>
+  <p>Clique: revela a tarefa da sala. “Se eu fosse a agência média aqui, começaria por essa.”</p>
+  <p class="se">Se a mais arriscada for também a que mais toma tempo:</p><p>“Essa não sai da mão de vocês. Ela entra com revisão forte. Já já eu mostro como.”</p>`},
+ {id:"area", min:10.5, tit:"Você escolhe: qual área primeiro", abre:["area","freq","tempo","risco"],
+  notas:`<p>“Vou mostrar quatro rotinas de antes e depois. Vocês escolhem a ordem.”</p>
+  <p>30 segundos. A ordem das próximas telas segue a votação.</p>`},
+ {id:"demo1", min:11.5, tit:"Demonstração 1", demo:0},
+ {id:"demo2", min:15, tit:"Demonstração 2", demo:1},
+ {id:"demo3", min:18, tit:"Demonstração 3", demo:2},
+ {id:"demo4", min:21, tit:"Demonstração 4", demo:3},
+ {id:"criterio", min:24, tit:"Automação com critério: três níveis",
+  notas:`<p>“Antes de sair automatizando, critério.” Revelar os três níveis.</p>
+  <p>“Agora um jogo rápido. Eu falo a tarefa, vocês dizem o nível.”</p>`},
+ {id:"sem1", min:25, tit:"Semáforo 1: resumo de reunião interna", abre:["s1"],
+  notas:`<p>Ler a tarefa. 30 a 40 segundos. Clique revela a resposta.</p><p>“Interno, baixo risco, fácil de conferir.”</p>`},
+ {id:"sem2", min:26.5, tit:"Semáforo 2: legendas do cliente", abre:["s2"],
+  notas:`<p>Clique revela. “Sai com o nome do cliente. Alguém lê antes.”</p>`},
+ {id:"sem3", min:28, tit:"Semáforo 3: cliente irritado", abre:["s3"],
+  notas:`<p>Clique revela. “A IA te ajuda a pensar. Quem fala é você.”</p>
+  <p class="se">Se a sala votou “IA faz sozinha”:</p><p>Com humor: “Vamos conversar depois.”</p>`},
+ {id:"regra", min:29.5, tit:"A regra: automatize a passagem",
+  notas:`<p>“Automatize a passagem. Deixe o julgamento com a equipe.”</p>
+  <p>Clique: exemplos de passagem. “Nada disso é sistema novo. É ligar o que vocês já pagam.”</p>`},
+ {id:"equipe", min:31, tit:"Incorporar na equipe: quatro combinados",
+  notas:`<p>Um clique por combinado. Biblioteca, responsável, revisão, dados de cliente.</p>
+  <p>Dados: “Dado de cliente não entra em conta pessoal de ninguém. Use conta da agência, e combine o que nunca entra.”</p>`},
+ {id:"ficha", min:33.5, tit:"Exemplo de ficha de rotina",
+  notas:`<p>“É assim que uma rotina vira da agência e não de uma pessoa.” Ler os campos rapidamente.</p>
+  <p>“O kit que vocês vão receber tem fichas assim por área.”</p>`},
+ {id:"compromisso", min:35, tit:"Compromisso ao vivo (nuvem)", abre:["tarefa","revisor"],
+  notas:`<p>“Agora o mais importante. Escreve no celular a tarefa que você vai testar semana que vem. E quem revisa.”</p>
+  <p>Quem responder as duas recebe no celular um plano de 7 dias. “Tira print.”</p>
+  <p>Ler 3 ou 4 tarefas da nuvem.</p>`},
+ {id:"acoes", min:37.5, tit:"Três ações + kit por e-mail", abre:["tarefa","revisor"],
+  notas:`<p>Um clique por ação. Depois o kit.</p>
+  <p>“O kit de rotinas com IA por área e o checklist de priorização chegam no e-mail de quem se inscreveu.”</p>`},
+ {id:"bastao", min:39, tit:"Passagem de bastão para a Amanda", abre:["tarefa","revisor"],
+  notas:`<p>“Tudo que eu mostrei hoje tem uma coisa em comum: a IA rende mais quando conhece a operação da agência.”</p>
+  <p>Clique. “E é sobre isso que a Amanda vai falar agora.” Passar a palavra. Não vender nada.</p>`}
+];
+const ETAPAS = {horas:1, censo:2, tese:1, tres:3, mapa:1, demo1:2, demo2:2, demo3:2, demo4:2, criterio:3, sem1:1, sem2:1, sem3:1, regra:2, equipe:4, ficha:1, acoes:3, bastao:1};
+SLIDES.forEach(s => s.etapas = ETAPAS[s.id] || 0);
+const titulo = s => s.demo !== undefined ? `${s.tit}: ${nomeArea(ordemDemos()[s.demo])}` : s.tit;
+const notasDe = s => s.demo !== undefined ? DEMOS[ordemDemos()[s.demo]].notas : s.notas;
+/* No banco, slide e etapa viajam juntos: slide*10 + etapa. */
+const codificar = (i, e) => i*10 + e;
+const decodificar = v => [Math.floor((v||0)/10), (v||0) % 10];
+const proximo = (i, e) => e < SLIDES[i].etapas ? [i, e+1] : (i < SLIDES.length-1 ? [i+1, 0] : [i, e]);
+const anterior = (i, e) => e > 0 ? [i, e-1] : (i > 0 ? [i-1, SLIDES[i-1].etapas] : [i, e]);
+
+/* ===== Estado ===== */
+let sb = null;
+const VOTOS = {};                 // pergunta -> Map(dispositivo -> opcao)
+let SESSAO = {slide:0, abertas:[]};
+let atual = 0, etapa = 0;
+let online = false;
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+const fmt1 = n => n.toLocaleString("pt-BR", {minimumFractionDigits:1, maximumFractionDigits:1});
+function conta(p){
+  const m = VOTOS[p] || new Map(); const by = {};
+  for (const v of m.values()) by[v] = (by[v]||0) + 1;
+  return {total:m.size, by};
+}
+function addVoto(r){ (VOTOS[r.pergunta] ||= new Map()).set(r.dispositivo, r.opcao); }
+
+/* ===== Conexão ===== */
+function conectar(){
+  try { sb = supabase.createClient(CFG.url, CFG.anon, {auth:{persistSession:false}}); }
+  catch(e){ sb = null; }
+}
+async function carregarSessao(){
+  if (!sb) return;
+  const {data, error} = await sb.from("sessao").select("slide,abertas").eq("id", CFG.sessao).maybeSingle();
+  if (!error && data){ online = true; aoMudarSessao(data); } else online = false;
+  marcarStatus();
+}
+async function carregarVotos(){
+  if (!sb) return;
+  let q = sb.from("votos").select("pergunta,dispositivo,opcao").eq("sessao", CFG.sessao);
+  if (MODO === "plateia") q = q.eq("dispositivo", idDispositivo());   // o celular só precisa saber dos próprios votos
+  const {data, error} = await q.range(0, 9999);
+  if (error) return;
+  for (const k of Object.keys(VOTOS)) delete VOTOS[k];
+  data.forEach(addVoto);
+  aoMudarVotos();
+}
+function assinar(){
+  if (!sb) return;
+  const ch = sb.channel("palestra-" + CFG.sessao)
+    .on("postgres_changes", {event:"*", schema:"public", table:"sessao", filter:"id=eq." + CFG.sessao}, p => { if (p.new) aoMudarSessao(p.new); });
+  if (MODO !== "plateia") ch.on("postgres_changes", {event:"INSERT", schema:"public", table:"votos", filter:"sessao=eq." + CFG.sessao}, p => { addVoto(p.new); aoMudarVotos(); });
+  ch.subscribe(st => { if (st === "SUBSCRIBED"){ online = true; marcarStatus(); } });
+}
+async function controlar(i, e){
+  const abertas = SLIDES[i].abre || [];
+  if (!sb || !CHAVE) return false;
+  const {data, error} = await sb.rpc("controlar", {p_sessao:CFG.sessao, p_chave:CHAVE, p_slide:codificar(i, e||0), p_abertas:abertas});
+  if (error || data !== 1){ avisar(error ? "Sem conexão com a votação. Os slides seguem funcionando." : "Chave inválida: confira o link."); return false; }
+  return true;
+}
+async function zerar(){
+  if (!sb || !CHAVE) return;
+  const {data, error} = await sb.rpc("zerar", {p_sessao:CFG.sessao, p_chave:CHAVE});
+  if (error || data !== 1){ avisar("Não consegui zerar. Confira a conexão e a chave."); return; }
+  for (const k of Object.keys(VOTOS)) delete VOTOS[k];
+  inicioRelogio = null;
+  aoMudarSessao({slide:0, abertas:SLIDES[0].abre});
+  aoMudarVotos();
+  avisar("Votos zerados. Tudo pronto para começar.");
+}
+
+let aoMudarSessao = () => {}, aoMudarVotos = () => {}, marcarStatus = () => {}, avisar = () => {};
+
+/* ================= TELÃO ================= */
+function qr(el){ el.innerHTML = QR[el.dataset.qr] || ""; }
+function pollHTML(p){
+  return `<div class="poll" data-poll="${p}">` + POLLS[p].ops.map(([id,l]) =>
+    `<div class="row" data-op="${id}"><span class="lbl">${esc(l)}</span><span class="track"><i></i></span><span class="pct num">0%</span></div>`).join("") + `</div>`;
+}
+function topo(eyebrow, polls){
+  const box = polls && polls.length ? `<div class="votos-box"><div><b class="num" data-total="${polls.join(",")}">0 votos</b><small>vote pelo celular</small><span class="u">${esc(LINK_TXT)}</span></div><div class="qr-mini" data-qr="publico"></div></div>` : "";
+  return `<div class="topo"><div class="eyebrow">${esc(eyebrow)}</div>${box}</div>`;
+}
+const rodape = n => `<div class="rodape"><span>Jaqueline Bosa · Imersão para Agências · Operand</span><span class="num">${String(n+1).padStart(2,"0")}/${SLIDES.length}</span></div>`;
+
+function demoHTML(n){
+  const id = ordemDemos()[n], D = DEMOS[id];
+  const caso = D.caso ? `<div class="caso" data-e="2"><span class="ant num">36h</span><span class="dep num g" data-count="9" data-from="36" data-suf="h">36h</span><p><b>Caso real: MB Consultoria Política.</b><br>Tempo de construção estratégica, antes e depois de organizar a rotina com IA.</p></div>` : "";
+  return `${topo(`Demonstração ${n+1} de 4 · antes e depois`)}
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:30px"><span class="area-tag">${esc(nomeArea(id))}</span><span class="ordem">ordem escolhida pela sala</span></div>
+  <h2 class="h-m" style="margin-top:14px">${esc(D.titulo)}</h2>
+  <div class="ad"${D.caso ? ` style="flex:none"` : ""}>
+   <div class="col antes"><div class="cab2"><b>Antes</b><span>${D.antes.length} passos, todos na mão</span></div><ol>${D.antes.map(t => `<li>${esc(t)}</li>`).join("")}</ol></div>
+   <div class="col depois" data-e="1"><div class="cab2"><b class="g">Depois</b><span>com a ferramenta que vocês já têm</span></div><ol>${D.depois.map(t => `<li>${esc(t)}</li>`).join("")}</ol>
+    ${D.caso ? "" : `<div class="fica" data-e="2"><small>Fica com a equipe</small>${esc(D.fica)}</div>`}</div>
+  </div>${caso}`;
+}
+function semHTML(p, n){
+  return `${topo(`Semáforo · ${n} de 3`, [p])}
+  <div class="tarefa-card"><small>A tarefa</small>${esc(POLLS[p].q)}</div>
+  <div class="sem poll" data-poll="${p}" data-sem="${p}">${NIVEL.map(([id,l],k) => `<div class="row" data-op="${id}"><span class="lbl"><span class="dot d${k+1}"></span>${esc(l)}</span><span class="pct num">0%</span><span class="track"><i></i></span></div>`).join("")}</div>
+  <p class="porque" data-e="1">${SEM[p].porque}</p>`;
+}
+
+const TELAS = {
+ capa: () => `
+  <div class="capa">
+   <div>
+    <div class="tag">Imersão para Agências · Tríade do Crescimento 2027</div>
+    <h1>IA na agência sem <span class="it g">complicação</span></h1>
+    <p class="sub">O que usar, o que automatizar e o que deixar com a equipe.</p>
+    <div class="assina">Jaqueline Bosa <span>· estrategista de marketing e IA</span></div>
+   </div>
+   <div class="entrar">
+    <div class="qr" data-qr="publico"></div>
+    <p>Aponte a câmera ou clique no link do chat.<br>Hoje a palestra tem a sua voz.</p>
+    <div class="url">${esc(LINK_TXT)}</div>
+   </div>
+  </div>`,
+ uso_ia: () => `${topo("Aquecimento · quem está aqui", ["uso_ia"])}
+  <div class="enquete"><h2 class="h-m">Para que a sua equipe mais usa IA <span class="it g">hoje?</span></h2>${pollHTML("uso_ia")}</div>`,
+ horas: () => `${topo("Rodada 1 · as horas da sala", ["horas"])}
+  <h2 class="h-m" style="margin-top:30px">Quantas horas por semana você gasta com tarefas que se <span class="it g">repetem?</span></h2>
+  <div class="lado">
+   ${pollHTML("horas")}
+   <div class="contador">
+    <div class="n num g" data-horas>0</div>
+    <div class="u2">horas por semana, só nesta sala</div>
+    <div class="s">Soma de quem votou, pelo meio de cada faixa.</div>
+    <div class="eq" data-e="1">É como ter <span class="g num" data-pessoas>0</span> pessoas trabalhando só nisso, a semana inteira.</div>
+   </div>
+  </div>`,
+ censo: () => `${topo("O que as agências dizem")}
+  <div class="centro">
+   <div class="dados duo" style="margin-top:0">
+    <div class="dado"><div class="n num g" data-count="6" data-suf=" em 10">0 em 10</div><p>lideranças apontam prospecção e escala como o desafio</p></div>
+    <div class="dado" data-e="1"><div class="n num" data-count="42" data-suf="%">0%</div><p>acumulam atendimento e comercial</p></div>
+   </div>
+   <h2 class="h-m" data-e="2">Não falta vontade de crescer. Falta tempo, e ele está preso na <span class="it g">rotina.</span></h2>
+  </div>
+  <div class="fonte">Fonte: Censo Agências 2026.</div>`,
+ eu: () => `${topo("Quem está aqui com vocês")}
+  <div class="eu">
+   <div class="centro">
+    <h2 class="h-xl">Jaqueline Bosa</h2>
+    <p class="lead"><strong>15 anos no Itaú</strong> em relacionamento com clientes de alta renda. Hoje, estratégia, marketing e IA para agências e consultorias, com o <strong>Método AXIA</strong>.</p>
+    <h2 class="h-m" style="margin-top:20px">Minha pergunta favorita: onde está a hora que a equipe <span class="it g">perde?</span></h2>
+   </div>
+   <div class="foto"><img alt="Jaqueline Bosa" src="${FOTOS.retrato}"></div>
+  </div>`,
+ tese: () => `<div class="frase">
+   <h2 class="h-xl">IA na agência não começa pela ferramenta. Começa pela <span class="it g">rotina.</span></h2>
+   <p class="lead" data-e="1">Quem começa pela ferramenta coleciona assinatura. <strong>Quem começa pela rotina ganha hora.</strong></p>
+  </div>`,
+ tres: () => `${topo("O mapa de oportunidades")}
+  <h2 class="h-l" style="margin-top:40px">Por onde começar? <span class="it g">Três perguntas.</span></h2>
+  <div class="tres">
+   <div class="p" data-e="1"><span class="l g">F</span><b>Frequência</b><span>Quantas vezes isso se repete na semana?</span></div>
+   <div class="p" data-e="2"><span class="l g">T</span><b>Tempo</b><span>Quanto da semana de alguém isso come?</span></div>
+   <div class="p" data-e="3"><span class="l g">R</span><b>Risco</b><span>Qual o estrago se sair errado para o cliente?</span></div>
+  </div>`,
+ mapa: () => `${topo("Mapa ao vivo · responda as três no celular", ["freq","tempo","risco"])}
+  <div class="mapa">
+   <div class="plano" data-mapa>
+    <div class="q q1">Não mexe agora</div><div class="q q2">Com revisão forte</div><div class="q q3">Deixa para depois</div><div class="q q4">Comece aqui</div>
+    <div class="eixo-x"></div><div class="eixo-y"></div>
+    <span class="rx">mais repete e mais toma tempo →</span><span class="ry">mais risco →</span>
+    ${TAREFAS.map(([id,l]) => `<div class="bolha" data-t="${id}" style="left:30%;bottom:30%;width:110px;height:110px"><span>${esc(l)}</span></div>`).join("")}
+   </div>
+   <div class="rank"><h3>Pontuação da sala</h3><div data-rank></div>
+    <div class="ganha" data-e="1">A sala começaria por: <span class="g" data-vencedora>…</span></div>
+    <div class="leg">Pontos = frequência + tempo − risco, em % dos votos.</div></div>
+  </div>`,
+ area: () => `${topo("Você escolhe a ordem", ["area"])}
+  <div class="enquete"><h2 class="h-m">Qual área você quer ver <span class="it g">primeiro?</span></h2>${pollHTML("area")}
+  <div class="aguarda">Quatro rotinas reais de antes e depois. A mais votada abre.</div></div>`,
+ demo1: () => demoHTML(0), demo2: () => demoHTML(1), demo3: () => demoHTML(2), demo4: () => demoHTML(3),
+ criterio: () => `${topo("Automação com critério")}
+  <h2 class="h-l" style="margin-top:40px">Nem tudo que a IA faz, ela deve fazer <span class="it g">sozinha.</span></h2>
+  <div class="niveis">
+   <div class="nivel" data-e="1"><span class="dot d1"></span><b>IA faz sozinha</b><span>Interno, repetitivo, fácil de conferir.</span></div>
+   <div class="nivel" data-e="2"><span class="dot d2"></span><b>IA rascunha, alguém revisa</b><span>Sai com o nome do cliente ou da agência.</span></div>
+   <div class="nivel" data-e="3"><span class="dot d3"></span><b>Só gente</b><span>Relação, conflito, decisão de escopo e preço.</span></div>
+  </div>`,
+ sem1: () => semHTML("s1", 1), sem2: () => semHTML("s2", 2), sem3: () => semHTML("s3", 3),
+ regra: () => `<div class="frase">
+   <h2 class="h-xl">Automatize a passagem. Deixe o julgamento com a <span class="it g">equipe.</span></h2>
+   <p class="lead" data-e="1">A transcrição que vira ata. O formulário que vira briefing. A planilha que vira rascunho de relatório. <strong>É ligar o que vocês já usam, sem criar sistema novo.</strong></p>
+   <p class="lead" data-e="2">Toda passagem automática tem <strong>um dono</strong> e <strong>um ponto de conferência.</strong></p>
+  </div>`,
+ equipe: () => `${topo("Incorporar na equipe")}
+  <h2 class="h-l" style="margin-top:40px">Quatro <span class="it g">combinados.</span></h2>
+  <div class="quatro">
+   <div class="it2" data-e="1"><span class="k g">1</span><div><b>Biblioteca de rotinas</b><span>Cada comando que funcionou vira ficha, num lugar que todo mundo acha.</span></div></div>
+   <div class="it2" data-e="2"><span class="k g">2</span><div><b>Um responsável por rotina</b><span>Quem cuida, atualiza e ensina quem chegou agora.</span></div></div>
+   <div class="it2" data-e="3"><span class="k g">3</span><div><b>Revisão humana combinada antes</b><span>Quem lê, o que confere, quando pode seguir sem revisão.</span></div></div>
+   <div class="it2" data-e="4"><span class="k g">4</span><div><b>Regra para dados de clientes</b><span>Conta da agência, nunca pessoal. E uma lista clara do que nunca entra.</span></div></div>
+  </div>`,
+ ficha: () => `${topo("Biblioteca de rotinas · exemplo")}
+  <h2 class="h-m" style="margin-top:30px">A rotina é da agência, e não de quem <span class="it g">lembra.</span></h2>
+  <div class="ficha">
+   <div class="tt">Ata de reunião de cliente <small>Atendimento</small></div>
+   <div class="c"><small>Quando usar</small><div>Assim que a reunião terminar</div></div>
+   <div class="c"><small>O que entra</small><div>A transcrição da reunião</div></div>
+   <div class="c cmd" data-e="1"><small>Comando salvo</small><div>Organize esta transcrição em ata: decisões, pendências com responsável e prazo, e dúvidas em aberto. Não invente nada que não foi dito. Tom: o do guia do cliente.</div></div>
+   <div class="c"><small>Quem revisa</small><div>O atendimento da conta</div></div>
+   <div class="c"><small>Onde fica</small><div>Na pasta do cliente, com a data</div></div>
+  </div>`,
+ compromisso: () => `${topo("Seu compromisso · responda no celular", ["tarefa","revisor"])}
+  <h2 class="h-m" style="margin-top:24px">Qual tarefa você vai testar com IA na semana que <span class="it g">vem?</span></h2>
+  <div class="comp">
+   <div class="nuvem" data-cloud="tarefa"><span style="font-size:32px;font-weight:300">As tarefas aparecem aqui conforme vocês enviam.</span></div>
+   <div class="rev"><h3>Quem revisa</h3>${pollHTML("revisor")}<p class="lead" style="font-size:26px">Quem responder as duas recebe no celular um plano de 7 dias.</p></div>
+  </div>`,
+ acoes: () => `${topo("Para fazer na semana que vem")}
+  <div class="acoes">
+   <div class="acao" data-e="1"><span class="k g">1</span><div><b>Liste 5 tarefas que se repetem</b><span>As que você faz igual, só muda o cliente.</span></div></div>
+   <div class="acao" data-e="2"><span class="k g">2</span><div><b>Escolha 1 pelo mapa</b><span>Frequência, tempo e risco. Comece no canto de baixo à direita.</span></div></div>
+   <div class="acao" data-e="3"><span class="k g">3</span><div><b>Defina quem revisa</b><span>Antes de testar, e não depois que der errado.</span></div></div>
+  </div>
+  <div class="kit"><div><b>Kit de rotinas com IA por área + checklist de priorização</b><br><span>Chega no e-mail de quem se inscreveu na imersão.</span></div><span>${esc(CFG.arroba)}</span></div>`,
+ bastao: () => `<div class="frase">
+   <h2 class="h-xl">A IA rende mais quando conhece a operação da <span class="it g">agência.</span></h2>
+   <p class="lead" data-e="1">Com vocês, <strong>Amanda</strong>.</p>
+  </div>`
+};
+
+function iniciarTelao(){
+  document.getElementById("telao").hidden = false;
+  const stage = document.getElementById("stage");
+  const ajustar = () => { const s = Math.min(innerWidth/1920, innerHeight/1080); stage.style.transform = `translate(-50%,-50%) scale(${s})`; };
+  addEventListener("resize", ajustar); ajustar();
+
+  let avisoT;
+  avisar = (msg) => {
+    let el = stage.querySelector(".aviso"); if (!el){ el = document.createElement("div"); el.className = "aviso"; stage.appendChild(el); }
+    el.textContent = msg; clearTimeout(avisoT); avisoT = setTimeout(() => el.remove(), 3500);
+  };
+  marcarStatus = () => { const d = stage.querySelector(".status"); if (d) d.classList.toggle("on", online); };
+
+  function desenhar(){
+    const ticks = SLIDES.map((s, n) => `<button class="tick" data-n="${n}" aria-label="Ir para o slide ${n+1}: ${esc(titulo(s))}"><span>${n+1} · ${esc(titulo(s))}</span></button>`).join("");
+    stage.innerHTML = `<section class="slide">${TELAS[SLIDES[atual].id]()}${rodape(atual)}</section>
+      <div class="progresso"></div><nav class="ticks">${ticks}</nav><span class="status"></span>`;
+    stage.querySelectorAll("[data-qr]").forEach(qr);
+    stage.querySelectorAll(".slide h1, .slide h2").forEach(montarPalavras);
+    aplicarEtapa(true);
+    marcarStatus();
+    aoMudarVotos();
+  }
+  function aplicarEtapa(primeira){
+    const sec = stage.querySelector(".slide");
+    sec.querySelectorAll("[data-e]").forEach(el => {
+      const on = +el.dataset.e <= etapa;
+      if (on && !el.classList.contains("on")){ el.classList.add("on"); contarDentro(el); }
+      if (!on) el.classList.remove("on");
+    });
+    if (primeira) sec.querySelectorAll("[data-count]").forEach(el => { if (!el.closest("[data-e]")) contar(el); });
+    sec.querySelectorAll("[data-sem]").forEach(el => el.classList.toggle("revelado", etapa >= 1));
+    const total = SLIDES.reduce((t, s) => t + s.etapas + 1, 0);
+    const feito = SLIDES.slice(0, atual).reduce((t, s) => t + s.etapas + 1, 0) + etapa + 1;
+    stage.querySelector(".progresso").style.width = (100 * feito / total) + "%";
+    stage.querySelectorAll(".tick").forEach(t => t.classList.toggle("on", +t.dataset.n === atual));
+    let d = stage.querySelector(".dica-clique");
+    if (CHAVE && etapa < SLIDES[atual].etapas){ if (!d){ d = document.createElement("div"); d.className = "dica-clique"; d.textContent = "clique para revelar"; stage.appendChild(d); } }
+    else if (d) d.remove();
+  }
+  aoMudarVotos = () => atualizarResultados(stage);
+  aoMudarSessao = (d) => {
+    SESSAO = {slide:d.slide, abertas:d.abertas||[]};
+    const [i, e] = decodificar(d.slide);
+    if (i < 0 || i >= SLIDES.length) return;
+    if (i !== atual){ atual = i; etapa = e; desenhar(); }
+    else if (e !== etapa){ etapa = e; aplicarEtapa(); }
+  };
+  async function ir([i, e]){
+    i = Math.max(0, Math.min(SLIDES.length-1, i)); e = Math.max(0, Math.min(SLIDES[i].etapas, e));
+    if (i === atual && e === etapa) return;
+    const mudouSlide = i !== atual;
+    atual = i; etapa = e;
+    if (mudouSlide) desenhar(); else aplicarEtapa();
+    await controlar(i, e);
+  }
+  stage.addEventListener("click", ev => {
+    if (!CHAVE) return;
+    const t = ev.target.closest(".tick");
+    if (t){ ir([+t.dataset.n, 0]); return; }
+    ir(proximo(atual, etapa));
+  });
+  let parado;
+  addEventListener("mousemove", () => { stage.classList.remove("sem-cursor"); clearTimeout(parado); parado = setTimeout(() => stage.classList.add("sem-cursor"), 2500); });
+  let pedeZerar = false;
+  addEventListener("keydown", e => {
+    if (e.key === "f" || e.key === "F"){ document.documentElement.requestFullscreen?.().catch(()=>{}); return; }
+    if (!CHAVE) return;   // sem chave o telão só espelha o roteiro
+    if (["ArrowRight","PageDown"," ","Enter","ArrowDown"].includes(e.key)){ e.preventDefault(); ir(proximo(atual, etapa)); }
+    if (["ArrowLeft","PageUp","Backspace","ArrowUp"].includes(e.key)){ e.preventDefault(); ir(anterior(atual, etapa)); }
+    if (e.key === "Home") ir([0, 0]);
+    if (e.key === "End") ir([SLIDES.length-1, 0]);
+    if (e.key === "z" || e.key === "Z"){
+      if (pedeZerar){ pedeZerar = false; zerar(); } else { pedeZerar = true; avisar("Zerar todos os votos? Aperte Z de novo para confirmar."); setTimeout(()=>pedeZerar=false, 3500); }
+    }
+  });
+  desenhar();
+}
+
+/* Quebra um título em palavras que entram uma a uma (o texto continua o mesmo para leitores de tela). */
+function montarPalavras(h){
+  if (h.dataset.montado) return; h.dataset.montado = 1;
+  let i = 0; const frag = document.createDocumentFragment();
+  [...h.childNodes].forEach(n => {
+    if (n.nodeType === 3){
+      n.textContent.split(/(\s+)/).forEach(part => {
+        if (!part) return;
+        if (/^\s+$/.test(part)){ frag.appendChild(document.createTextNode(" ")); return; }
+        const w = document.createElement("span"); w.className = "w"; w.style.setProperty("--i", i++); w.textContent = part; frag.appendChild(w);
+      });
+    } else if (n.nodeType === 1){
+      if (n.tagName === "BR"){ frag.appendChild(n); return; }
+      const w = document.createElement("span"); w.className = "w"; w.style.setProperty("--i", i++); w.appendChild(n); frag.appendChild(w);
+    }
+  });
+  h.textContent = ""; h.appendChild(frag);
+}
+/* Números que sobem contando quando aparecem. */
+function contar(el){
+  const alvo = parseFloat(el.dataset.count), de = parseFloat(el.dataset.from || "0"), dec = +(el.dataset.dec || 0);
+  const pre = el.dataset.pre || "", suf = el.dataset.suf || "";
+  const fmt = v => pre + v.toLocaleString("pt-BR", {minimumFractionDigits:dec, maximumFractionDigits:dec}) + suf;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches){ el.textContent = fmt(alvo); return; }
+  const t0 = performance.now(), dur = 1400;
+  const passo = t => { const k = Math.min(1, (t - t0)/dur), e = 1 - Math.pow(1-k, 3); el.textContent = fmt(de + (alvo-de)*e); if (k < 1) requestAnimationFrame(passo); else el.dataset.contou = 1; };
+  requestAnimationFrame(passo);
+}
+function contarDentro(el){ (el.matches("[data-count]") ? [el] : []).concat([...el.querySelectorAll("[data-count]")]).forEach(contar); }
+/* Número ao vivo: desliza do valor atual até o novo. */
+function deslizar(el, alvo, dec){
+  const de = parseFloat(el.dataset.v || "0"); el.dataset.v = alvo;
+  if (de === alvo) return;
+  const f = v => v.toLocaleString("pt-BR", {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches){ el.textContent = f(alvo); return; }
+  const t0 = performance.now();
+  const passo = t => { const k = Math.min(1, (t - t0)/900), e = 1 - Math.pow(1-k, 3); el.textContent = f(de + (alvo-de)*e); if (k < 1) requestAnimationFrame(passo); };
+  requestAnimationFrame(passo);
+}
+
+/* Mapa da sala: cada tarefa vira uma bolha. x = (frequência + tempo)/2, y = risco, em % dos votos. */
+function calcularMapa(){
+  const pct = p => { const {total, by} = conta(p); return id => total ? (by[id]||0)/total : 0; };
+  const f = pct("freq"), t = pct("tempo"), r = pct("risco");
+  return TAREFAS.map(([id,l]) => ({id, l, ganho:(f(id)+t(id))/2, risco:r(id), pontos:Math.round(100*(f(id)+t(id)-r(id)))}))
+    .sort((a,b) => b.pontos - a.pontos);
+}
+function desenharMapa(root){
+  const plano = root.querySelector("[data-mapa]"); if (!plano) return;
+  const lista = calcularMapa();
+  const votos = conta("freq").total + conta("tempo").total + conta("risco").total;
+  const mg = Math.max(...lista.map(x => x.ganho)) || 1, mr = Math.max(...lista.map(x => x.risco)) || 1;
+  const top = votos ? lista[0].id : null;
+  lista.forEach((x, k) => {
+    const b = plano.querySelector(`[data-t="${x.id}"]`); if (!b) return;
+    // sem votos as bolhas ficam espalhadas no meio; com votos, vão para o seu lugar
+    const left = votos ? 13 + 72 * x.ganho/mg : 20 + (k % 3) * 18, bottom = votos ? 13 + 68 * x.risco/mr : 30 + Math.floor(k/3) * 26;
+    const tam = Math.round(110 + 90 * (votos ? Math.sqrt((x.ganho + x.risco)/Math.max(mg, mr)) : 0));
+    Object.assign(b.style, {left:left+"%", bottom:bottom+"%", width:tam+"px", height:tam+"px"});
+    b.classList.toggle("top", x.id === top);
+  });
+  const rk = root.querySelector("[data-rank]");
+  if (rk) rk.innerHTML = lista.map((x, k) => `<div class="rk${x.id===top?" top":""}"><i>${k+1}</i><span>${esc(x.l)}</span><b class="num">${votos ? x.pontos : "·"}</b></div>`).join("");
+  const v = root.querySelector("[data-vencedora]"); if (v) v.textContent = top ? nomeTarefa(top) : "aguardando votos";
+}
+
+function atualizarResultados(root){
+  root.querySelectorAll("[data-poll]").forEach(box => {
+    const {total, by} = conta(box.dataset.poll);
+    let max = 0; for (const v of Object.values(by)) max = Math.max(max, v);
+    box.querySelectorAll("[data-op]").forEach(row => {
+      const n = by[row.dataset.op] || 0, pct = total ? Math.round(n*100/total) : 0;
+      const i = row.querySelector(".track i"); if (i) i.style.width = pct + "%";
+      const t = row.querySelector(".pct"); if (t) t.textContent = pct + "%";
+      row.classList.toggle("lead-op", n > 0 && n === max);
+      if (box.dataset.sem) row.classList.toggle("certa", row.dataset.op === SEM[box.dataset.sem].certa);
+    });
+  });
+  root.querySelectorAll("[data-total]").forEach(el => {
+    const n = Math.max(...el.dataset.total.split(",").map(p => conta(p).total));
+    el.textContent = n + (n === 1 ? " voto" : " votos");
+  });
+  const h = root.querySelector("[data-horas]");
+  if (h){
+    const {by} = conta("horas"); let soma = 0;
+    for (const [k, v] of Object.entries(by)) soma += (MEIO_H[k]||0) * v;
+    deslizar(h, Math.round(soma), 0);
+    const p = root.querySelector("[data-pessoas]"); if (p) deslizar(p, Math.round(soma/40*10)/10, 1);
+  }
+  desenharMapa(root);
+  root.querySelectorAll("[data-cloud]").forEach(el => {
+    const {total, by} = conta(el.dataset.cloud);
+    if (!total) return;
+    const lista = Object.entries(by).sort((x,y) => y[1]-x[1]).slice(0, 30);
+    const max = lista[0][1], campea = lista[0];
+    // mistura a ordem para a nuvem não virar ranking, com a maior no centro
+    const ordem = []; lista.forEach((w,i) => i % 2 ? ordem.push(w) : ordem.unshift(w));
+    el.innerHTML = "";
+    ordem.forEach(([w,n]) => {
+      const s = document.createElement("span");
+      s.textContent = w;
+      s.style.fontSize = Math.round(34 + 70 * Math.sqrt(n/max)) + "px";
+      if (w === campea[0]){ s.className = "top g"; }
+      else if (n/max > .5) s.style.color = "var(--nevoa)";
+      el.appendChild(s);
+    });
+  });
+}
+
+/* ================= PLATEIA ================= */
+function idDispositivo(){
+  try {
+    let id = localStorage.getItem("pa-dispositivo");
+    if (!id){ id = (crypto.randomUUID ? crypto.randomUUID() : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16))); localStorage.setItem("pa-dispositivo", id); }
+    return id;
+  } catch(e){ return window._pid ||= (crypto.randomUUID ? crypto.randomUUID() : "10000000-1000-4000-8000-100000000000"); }
+}
+function limparTexto(s){
+  return s.toLowerCase().normalize("NFC").replace(/[^\p{L}\p{N} -]/gu, "").replace(/\s+/g, " ").trim().split(" ").slice(0, 4).join(" ").slice(0, 24).trim();
+}
+function iniciarPlateia(){
+  const root = document.getElementById("plateia"); root.hidden = false;
+  const eu = idDispositivo();
+  const meus = {};   // pergunta -> opcao
+  const erros = {};
+  let assinatura = "";
+  try { Object.assign(meus, JSON.parse(localStorage.getItem("op-meus") || "{}")); } catch(e){}
+  const guardar = () => { try { localStorage.setItem("op-meus", JSON.stringify(meus)); } catch(e){} };
+  const rotulo = (p, v) => POLLS[p].livre ? v : ((POLLS[p].ops.find(o => o[0]===v)||[,v])[1]);
+
+  function plano(){
+    if (!meus.tarefa || !meus.revisor) return "";
+    const rev = {eu:"você mesma(o)", lider:"a liderança", dupla:"uma dupla da equipe", naosei:"defina até segunda"}[meus.revisor] || "";
+    const marcas = [["mais repete","freq"],["mais toma tempo","tempo"],["menos entregaria","risco"]].filter(([,p]) => meus[p]).map(([t,p]) => `${t} <b>${esc(nomeTarefa(meus[p]))}</b>`);
+    const mapa = marcas.length ? `<p class="lin">No mapa você marcou: ${marcas.join(", ")}.</p>` : "";
+    return `<section class="p-plano"><span class="rot" style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--coral);font-weight:600">Seu teste de 7 dias</span>
+      <h2>${esc(meus.tarefa)}</h2><p class="lin">Quem revisa: <b>${esc(rev)}</b></p>${mapa}
+      <ol><li>Dia 1: escreva como essa tarefa é feita hoje, passo a passo.</li><li>Dia 2: rode com a IA num caso real e compare com o jeito de sempre.</li><li>Dia 3 e 4: ajuste o comando com quem revisa.</li><li>Dia 5: salve o comando como ficha, num lugar que a equipe acha.</li><li>Dia 7: decida se vira rotina da agência.</li></ol>
+      <span class="dica">Tire um print desta tela.</span></section>`;
+  }
+  function render(){
+    const abertas = (SESSAO.abertas || []).filter(p => POLLS[p]);
+    const sig = abertas.join(",") + "|" + abertas.map(p => (meus[p]||"") + (erros[p]||"")).join(",");
+    if (sig === assinatura) return; assinatura = sig;
+    let corpo;
+    if (!abertas.length){
+      corpo = `<div class="p-espera" style="display:flex;flex-direction:column;gap:18px">
+        <div class="p-pulse" aria-hidden="true"></div>
+        <h1>Olho na <span class="it g">tela.</span></h1>
+        <p>A próxima pergunta aparece aqui sozinha, quando for a hora. Deixa esta página aberta.</p></div>${plano()}`;
+    } else {
+      // as já respondidas viram uma linha curta; as abertas ficam em cima
+      const ordem = abertas.filter(p => !meus[p]).concat(abertas.filter(p => meus[p]));
+      corpo = ordem.map(p => {
+        const P = POLLS[p], meu = meus[p];
+        const err = erros[p] ? `<p class="p-erro">${esc(erros[p])}</p>` : "";
+        if (meu) return `<div class="p-feito"><span>${esc(P.q)}</span><b>${esc(rotulo(p, meu))}</b></div>`;
+        const cab = `<span class="rot">${esc(P.rot)}</span><h2>${esc(P.q)}</h2>${P.ctx ? `<p class="ctx">${esc(P.ctx)}</p>` : ""}`;
+        if (P.livre) return `<section class="p-q">${cab}<form class="p-word" data-p="${p}"><input id="in-${p}" name="w" maxlength="24" autocomplete="off" placeholder="ex.: ata de reunião" aria-label="Sua resposta" required><button class="p-btn">Enviar</button></form>${err}</section>`;
+        const bts = P.ops.map(([id,l]) => `<button class="p-op" data-p="${p}" data-o="${id}">${esc(l)}</button>`).join("");
+        return `<section class="p-q">${cab}${bts}${err}</section>`;
+      }).join("");
+      if (abertas.every(p => meus[p])) corpo = `<div class="p-ok">Respondido. Olha o resultado na tela.</div>` + corpo;
+      corpo += plano();
+    }
+    root.innerHTML = `<div class="p-top"><span><b>IA na agência</b></span><span>ao vivo</span></div>
+      <div class="p-main">${corpo}</div>
+      <div class="p-rod">Jaqueline Bosa · ${esc(CFG.arroba)}</div>`;
+  }
+  async function votar(p, opcao){
+    if (!sb) { erros[p] = "Sem conexão. Tenta de novo em alguns segundos."; render(); return; }
+    meus[p] = opcao; delete erros[p]; guardar(); render();
+    const {error} = await sb.from("votos").insert({sessao:CFG.sessao, pergunta:p, dispositivo:eu, opcao});
+    if (error && error.code !== "23505"){
+      delete meus[p]; guardar();
+      erros[p] = error.code === "42501" ? "Essa votação já fechou. Aguarda a próxima." : "Não foi. Tenta de novo.";
+      assinatura = ""; render();
+    }
+  }
+  root.addEventListener("click", e => {
+    const b = e.target.closest("button[data-o]"); if (!b || b.disabled) return;
+    votar(b.dataset.p, b.dataset.o);
+  });
+  root.addEventListener("submit", e => {
+    e.preventDefault();
+    const f = e.target; const w = limparTexto(f.w.value);
+    if (!w){ erros[f.dataset.p] = "Escreve a tarefa em poucas palavras."; assinatura = ""; render(); return; }
+    votar(f.dataset.p, w);
+  });
+  aoMudarSessao = d => { SESSAO = {slide:d.slide, abertas:d.abertas||[]}; render(); };
+  aoMudarVotos = () => {
+    // o banco manda: se os votos foram zerados, o celular esquece o que tinha guardado
+    let mudou = false;
+    for (const p of Object.keys(POLLS)){
+      const v = VOTOS[p]?.get(eu);
+      if (v && meus[p] !== v){ meus[p] = v; mudou = true; }
+      if (!v && meus[p]){ delete meus[p]; mudou = true; }
+    }
+    if (mudou){ guardar(); assinatura = ""; render(); }
+  };
+  render();
+}
+
+/* ================= ROTEIRO ================= */
+let inicioRelogio = null;
+function iniciarRoteiro(){
+  const root = document.getElementById("roteiro"); root.hidden = false;
+  try { const t = +localStorage.getItem("op-inicio"); if (t) inicioRelogio = t; } catch(e){}
+  let conf = false, msg = "";
+  avisar = m => { msg = m; render(); setTimeout(() => { msg = ""; render(); }, 3500); };
+  marcarStatus = () => render();
+
+  function render(){
+    const s = SLIDES[atual], prox = SLIDES[atual+1];
+    const vivo = (s.abre||[]).map(p => `<span>${esc(POLLS[p].q)} <b class="num">${conta(p).total} votos</b></span>`).join("");
+    root.innerHTML = `
+      <div class="r-top"><span>${online ? "conectado" : "sem conexão"} · ${atual+1}/${SLIDES.length}${s.etapas ? ` · revelação ${etapa}/${s.etapas}` : ""}</span><span class="relogio num" id="relogio">00:00</span></div>
+      <div><div class="r-meta">entra em ${fmt(s.min*60)} · ${hora(s.min)}</div><div class="r-tit">${esc(titulo(s))}</div></div>
+      ${vivo ? `<div class="r-vivo">${vivo}</div>` : ""}
+      <div class="r-notas">${notasDe(s)}</div>
+      <div class="r-prox">${prox ? "Próximo: " + esc(titulo(prox)) : "Último slide."}</div>
+      ${msg ? `<div class="r-conf">${esc(msg)}</div>` : ""}
+      <div class="r-bts"><button id="ant">Voltar</button><button id="prox" class="prox">${etapa < s.etapas ? "Revelar" : "Avançar"}</button></div>
+      ${conf ? `<div class="r-conf">Apagar todos os votos? <button id="sim">Sim, zerar</button><button id="nao">Cancelar</button></div>` : `<button class="r-zerar" id="zerar">Zerar votos do ensaio</button>`}`;
+    tic();
+    root.querySelector("#ant").onclick = () => ir(anterior(atual, etapa));
+    root.querySelector("#prox").onclick = () => ir(proximo(atual, etapa));
+    const z = root.querySelector("#zerar"); if (z) z.onclick = () => { conf = true; render(); };
+    const sim = root.querySelector("#sim"); if (sim) sim.onclick = async () => { conf = false; try{localStorage.removeItem("op-inicio")}catch(e){} await zerar(); render(); };
+    const nao = root.querySelector("#nao"); if (nao) nao.onclick = () => { conf = false; render(); };
+  }
+  function fmt(seg){ seg = Math.max(0, Math.round(seg)); return String(Math.floor(seg/60)).padStart(2,"0") + ":" + String(seg%60).padStart(2,"0"); }
+  function hora(min){ const t = 16*60 + 3 + Math.floor(min); return Math.floor(t/60) + "h" + String(t%60).padStart(2,"0"); }
+  function tic(){
+    const el = document.getElementById("relogio"); if (!el) return;
+    const dec = inicioRelogio ? (Date.now() - inicioRelogio)/1000 : 0;
+    el.textContent = fmt(dec);
+    const prox = SLIDES[atual+1];
+    el.classList.toggle("atras", !!(inicioRelogio && prox && dec > prox.min*60 + 30));
+  }
+  setInterval(tic, 1000);
+  async function ir([i, e]){
+    if (i === atual && e === etapa) return;
+    if (!inicioRelogio && (i > 0 || e > 0)){ inicioRelogio = Date.now(); try{localStorage.setItem("op-inicio", inicioRelogio)}catch(er){} }
+    atual = i; etapa = e; render();
+    await controlar(i, e);
+  }
+  aoMudarSessao = d => { SESSAO = {slide:d.slide, abertas:d.abertas||[]}; [atual, etapa] = decodificar(d.slide); render(); };
+  aoMudarVotos = () => { const el = root.querySelector(".r-vivo"); if (el || SLIDES[atual].demo !== undefined) render(); };
+  if (!CHAVE) avisar("Abra o roteiro com a chave no link para controlar a tela.");
+  render();
+}
+
+/* ===== Início ===== */
+(async function(){
+  conectar();
+  if (MODO === "telao") iniciarTelao();
+  else if (MODO === "roteiro") iniciarRoteiro();
+  else iniciarPlateia();
+  await carregarSessao();
+  await carregarVotos();
+  assinar();
+  // rede de segurança se o tempo real cair: relê a cada poucos segundos
+  setInterval(() => { carregarSessao(); if (MODO !== "plateia") carregarVotos(); }, MODO === "plateia" ? 6000 : 4000);
+})();
+</script>
+</body>
+</html>
