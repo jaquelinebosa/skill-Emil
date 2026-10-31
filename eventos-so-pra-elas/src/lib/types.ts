@@ -45,6 +45,21 @@ export interface Registration {
   cancelled_at: string | null;
   notes: string | null;
   created_at: string;
+  seller_id: string | null;
+  amount_cents: number;
+  commission_cents: number;
+  commission_paid_at: string | null;
+}
+
+export interface Seller {
+  id: string;
+  event_id: string;
+  code: string;
+  name: string;
+  whatsapp: string | null;
+  commission_percent: number;
+  staff_user_id: string | null;
+  active: boolean;
 }
 
 export interface Staff {

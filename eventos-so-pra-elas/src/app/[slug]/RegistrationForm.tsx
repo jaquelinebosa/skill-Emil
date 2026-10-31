@@ -8,10 +8,11 @@ interface Props {
   slug: string;
   askDietary: boolean;
   consentText: string;
+  sellerCode: string;
 }
 
-export default function RegistrationForm({ slug, askDietary, consentText }: Props) {
-  const [state, action, pending] = useActionState<FormState, FormData>(register.bind(null, slug), {});
+export default function RegistrationForm({ slug, askDietary, consentText, sellerCode }: Props) {
+  const [state, action, pending] = useActionState<FormState, FormData>(register.bind(null, slug, sellerCode), {});
   const val = state.values ?? {};
 
   if (state.info) {

@@ -3,10 +3,11 @@ import { signOut } from "./actions";
 import { ROLE_LABEL } from "@/lib/staff";
 import type { Staff } from "@/lib/types";
 
-export default function Nav({ staff, current, eventName }: { staff: Staff; current: "lista" | "checkin" | "evento"; eventName?: string }) {
+export default function Nav({ staff, current, eventName }: { staff: Staff; current: "lista" | "checkin" | "evento" | "comissoes"; eventName?: string }) {
   const items = [
     { key: "lista", href: "/painel", label: "Inscrições", show: staff.role !== "checkin" },
     { key: "checkin", href: "/painel/checkin", label: "Check-in", show: true },
+    { key: "comissoes", href: "/painel/comissoes", label: staff.role === "admin" ? "Comissões" : "Minhas comissões", show: staff.role !== "checkin" },
     { key: "evento", href: "/painel/evento", label: "Configurar evento", show: staff.role === "admin" },
   ];
   return (

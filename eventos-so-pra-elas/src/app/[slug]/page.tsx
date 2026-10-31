@@ -1,22 +1,24 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getEventBySlug, seatsTaken } from "@/lib/data";
+import { getEventBySlug, getSellerByCode, seatsTaken } from "@/lib/data";
 import { brl, eventDateLong } from "@/lib/format";
 import RegistrationForm from "./RegistrationForm";
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: Promise<{ slug: string }> };
+type Params = { params: Promise<{ slug: string }>; searchParams?: Promise<{ v?: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const ev = await getEventBySlug((await params).slug);
   return ev ? { title: `Inscrição · ${ev.name}`, description: `${eventDateLong(ev.event_date)}${ev.venue_name ? `, ${ev.venue_name}` : ""}.` } : {};
 }
 
-export default async function EventPage({ params }: Params) {
+export default async function EventPage({ params, searchParams }: Params) {
   const { slug } = await params;
+  const { v = "" } = (await searchParams) ?? {};
   const ev = await getEventBySlug(slug);
   if (!ev) notFound();
+  const seller = v ? await getSellerByCode(ev.id, v.toLowerCase()) : null;
 
   const left = ev.capacity - (await seatsTaken(ev.id));
   const soldOut = left <= 0;
@@ -50,7 +52,7 @@ export default async function EventPage({ params }: Params) {
         ) : (
           <>
             <p className="muted">Depois de enviar, você recebe a chave PIX. A vaga fica reservada por {ev.pending_ttl_hours} horas até a confirmação do pagamento.{left <= 20 ? ` Restam ${left} vagas.` : ""}</p>
-            <RegistrationForm slug={ev.slug} askDietary={ev.ask_dietary} consentText={ev.image_consent_text} />
+            <RegistrationForm slug={ev.slug} askDietary={ev.ask_dietary} consentText={ev.image_consent_text} sellerCode={seller?.code ?? ""} />
           </>
         )}
       </section>

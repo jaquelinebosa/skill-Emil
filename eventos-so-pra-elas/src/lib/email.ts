@@ -2,6 +2,7 @@ import QRCode from "qrcode";
 import { Resend } from "resend";
 import type { EventRow, Registration } from "./types";
 import { brl, dateTime, eventDateLong, firstName, ticketUrl, waLink } from "./format";
+import { contactWhatsapp, getSellerById } from "./data";
 
 const PLUM = "#8E2A5C";
 const INK = "#2A1B24";
@@ -58,13 +59,20 @@ async function send(to: string, subject: string, html: string, attachments?: { f
   return true;
 }
 
-export function salesWhatsappText(reg: Registration): string {
-  return `Oi Fernanda! Segue o comprovante do PIX da minha inscrição ${reg.code} (${reg.name}).`;
+export function salesWhatsappText(reg: Registration, contactName: string | null): string {
+  const hi = contactName ? `Oi ${firstName(contactName)}!` : "Oi!";
+  return `${hi} Segue o comprovante do PIX da minha inscrição ${reg.code} (${reg.name}).`;
+}
+
+/** Link de WhatsApp pra participante mandar o comprovante (vendedora da inscrição ou contato do evento). */
+export async function receiptWhatsappLink(reg: Registration, ev: EventRow): Promise<string | null> {
+  const c = contactWhatsapp(ev, await getSellerById(reg.seller_id));
+  return c.phone ? waLink(c.phone, salesWhatsappText(reg, c.name)) : null;
 }
 
 export async function sendPendingEmail(reg: Registration, ev: EventRow) {
   const link = ticketUrl(reg.ticket_token);
-  const wa = ev.sales_whatsapp ? waLink(ev.sales_whatsapp, salesWhatsappText(reg)) : null;
+  const wa = await receiptWhatsappLink(reg, ev);
   const body = `
 <p>Oi, ${esc(firstName(reg.name))}! Recebemos sua inscrição no <b>${esc(ev.name)}</b>, ${esc(eventDateLong(ev.event_date))}.</p>
 <p>Pra garantir sua vaga, faça o PIX e envie o comprovante pelo WhatsApp:</p>

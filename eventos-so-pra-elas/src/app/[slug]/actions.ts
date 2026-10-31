@@ -15,7 +15,7 @@ export interface FormState {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-export async function register(slug: string, _prev: FormState, form: FormData): Promise<FormState> {
+export async function register(slug: string, sellerCode: string, _prev: FormState, form: FormData): Promise<FormState> {
   const v = (k: string) => String(form.get(k) ?? "").trim();
   const values = {
     name: v("name"), email: v("email"), phone: v("phone"), instagram: v("instagram"),
@@ -46,6 +46,7 @@ export async function register(slug: string, _prev: FormState, form: FormData): 
     p_dietary: values.dietary.slice(0, 300),
     p_image_consent: values.image_consent === "sim",
     p_marketing_consent: values.marketing === "on",
+    p_seller_code: sellerCode || null,
   });
 
   if (error) {

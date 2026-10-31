@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import QRCode from "qrcode";
 import CopyButton from "@/components/CopyButton";
 import { getEventById, getRegistrationByToken } from "@/lib/data";
-import { salesWhatsappText } from "@/lib/email";
-import { brl, dateTime, displayStatus, eventDateLong, firstName, ticketUrl, timeOnly, waLink } from "@/lib/format";
+import { receiptWhatsappLink } from "@/lib/email";
+import { brl, dateTime, displayStatus, eventDateLong, firstName, ticketUrl, timeOnly } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Minha inscrição", robots: { index: false, follow: false } };
@@ -20,7 +20,7 @@ export default async function TicketPage({ params, searchParams }: Props) {
   if (!ev) notFound();
 
   const status = displayStatus(reg);
-  const wa = ev.sales_whatsapp ? waLink(ev.sales_whatsapp, salesWhatsappText(reg)) : null;
+  const wa = await receiptWhatsappLink(reg, ev);
   const where = [ev.venue_name, ev.venue_address].filter(Boolean).join(", ");
 
   return (

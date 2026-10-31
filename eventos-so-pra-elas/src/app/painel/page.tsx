@@ -3,11 +3,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/supabase/admin";
 import { requireStaff } from "@/lib/staff";
-import { getLatestEvent } from "@/lib/data";
+import { getLatestEvent, listSellers } from "@/lib/data";
 import { dateTime, displayStatus, formatPhone, STATUS_LABEL, ticketUrl, timeOnly, waLink, firstName, brl } from "@/lib/format";
 import type { Registration } from "@/lib/types";
 import Nav from "./Nav";
 import RegActions from "./RegActions";
+import SellerSelect from "./SellerSelect";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Painel", robots: { index: false } };
@@ -20,16 +21,18 @@ const FILTERS = [
   { key: "todas", label: "Todas" },
 ] as const;
 
-type Props = { searchParams: Promise<{ f?: string; q?: string }> };
+type Props = { searchParams: Promise<{ f?: string; q?: string; v?: string }> };
 
 export default async function Painel({ searchParams }: Props) {
   const staff = await requireStaff();
   if (staff.role === "checkin") redirect("/painel/checkin");
-  const { f = "pendentes", q = "" } = await searchParams;
+  const { f = "pendentes", q = "", v = "" } = await searchParams;
 
   const ev = await getLatestEvent();
   if (!ev) return <main className="page"><p>Nenhum evento cadastrado.</p></main>;
 
+  const sellers = await listSellers(ev.id);
+  const sellerName = new Map(sellers.map((s) => [s.id, s.name]));
   const { data } = await db().from("registrations").select("*").eq("event_id", ev.id).order("created_at", { ascending: false });
   const all = (data as Registration[]) ?? [];
   const withStatus = all.map((r) => ({ ...r, view: displayStatus(r) }));
@@ -51,6 +54,8 @@ export default async function Painel({ searchParams }: Props) {
       default: return r.view === "pending";
     }
   });
+  if (v === "org") list = list.filter((r) => !r.seller_id);
+  else if (v) list = list.filter((r) => sellers.find((s) => s.id === r.seller_id)?.code === v);
   if (term) {
     list = withStatus.filter((r) =>
       r.name.toLowerCase().includes(term) || r.code.toLowerCase().includes(term) || r.email.includes(term) ||
@@ -84,7 +89,14 @@ export default async function Painel({ searchParams }: Props) {
 
       {!term && (
         <nav className="tabs" aria-label="Filtrar">
-          {FILTERS.map((x) => <Link key={x.key} href={`/painel?f=${x.key}`} aria-current={f === x.key ? "page" : undefined}>{x.label}</Link>)}
+          {FILTERS.map((x) => <Link key={x.key} href={`/painel?f=${x.key}${v ? `&v=${v}` : ""}`} aria-current={f === x.key ? "page" : undefined}>{x.label}</Link>)}
+        </nav>
+      )}
+      {!term && sellers.length > 0 && (
+        <nav className="tabs" aria-label="Filtrar por vendedora">
+          <Link href={`/painel?f=${f}`} aria-current={!v ? "page" : undefined}>Todas as vendas</Link>
+          {sellers.map((s) => <Link key={s.id} href={`/painel?f=${f}&v=${s.code}`} aria-current={v === s.code ? "page" : undefined}>{s.name}</Link>)}
+          <Link href={`/painel?f=${f}&v=org`} aria-current={v === "org" ? "page" : undefined}>Organização</Link>
         </nav>
       )}
 
@@ -93,7 +105,7 @@ export default async function Painel({ searchParams }: Props) {
         {list.map((r) => {
           const waText = r.view === "paid"
             ? `Oi ${firstName(r.name)}! Pagamento confirmado, sua vaga no ${ev.name} está garantida. Seu ingresso com QR code: ${ticketUrl(r.ticket_token)}`
-            : `Oi ${firstName(r.name)}! Aqui é a Fernanda, do ${ev.name}. Vi sua inscrição ${r.code}. Os dados do PIX estão aqui: ${ticketUrl(r.ticket_token)}`;
+            : `Oi ${firstName(r.name)}! Aqui é da organização do ${ev.name}. Vi sua inscrição ${r.code}. Os dados do PIX estão aqui: ${ticketUrl(r.ticket_token)}`;
           return (
             <article key={r.id} className="reg">
               <div className="who">
@@ -101,6 +113,11 @@ export default async function Painel({ searchParams }: Props) {
                 <span className="meta">{r.code} · {formatPhone(r.phone)} · {r.email}{r.instagram ? ` · ${r.instagram}` : ""}</span>
                 <span className="meta">Inscrita em {dateTime(r.created_at)}{r.view === "pending" ? ` · paga até ${dateTime(r.expires_at)}` : ""}{r.paid_at ? ` · paga em ${dateTime(r.paid_at)}` : ""}</span>
                 {r.dietary && <span className="meta">Restrição: {r.dietary}</span>}
+                {isAdmin && sellers.length > 0 ? (
+                  <SellerSelect registrationId={r.id} current={r.seller_id} sellers={sellers.map((s) => ({ id: s.id, name: s.name }))} locked={!!r.commission_paid_at} />
+                ) : (
+                  <span className="meta">Venda de {r.seller_id ? sellerName.get(r.seller_id) ?? "vendedora" : "organização"}</span>
+                )}
               </div>
               <div className="tags">
                 <span className={`pill ${r.view}`}>{STATUS_LABEL[r.view]}</span>
